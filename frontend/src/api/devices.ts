@@ -10,6 +10,5 @@ export const DevicesApi = {
   remove: async (id: number) => deviceApi.delete(`/api/devices/${id}`),
   // assignment: either PATCH device user or dedicated endpoint; both patterns shown:
   assignToUser: async (deviceId: number, userId: number) =>
-    (await deviceApi.put<Device>(`/api/devices/${deviceId}`, { userId })).data,
-  // or if you exposed: POST /api/assignments { userId, deviceId }
+    (await deviceApi.put<Device>(`/api/devices/${deviceId}`, userId )).data,
 };

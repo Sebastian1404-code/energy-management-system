@@ -1,22 +1,29 @@
 // src/pages/admin/DevicesPage.tsx
 import { useEffect, useState } from "react";
 import { DevicesApi } from "../../api/devices";
+import { UsersApi } from "../../api/users";
+import type { User } from "../../api/users";
 import type { Device } from "../../api/devices";
 
 export default function DevicesPage(){
   const [rows, setRows] = useState<Device[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [name, setName] = useState("");
   const [max, setMax] = useState(0);
+  const [userId, setUserId] = useState<number | "">("");
   const [err, setErr] = useState("");
 
-  const load = async () => setRows(await DevicesApi.list());
+  const load = async () => {
+    setRows(await DevicesApi.list());
+    setUsers(await UsersApi.list());
+  };
   useEffect(()=>{ load(); }, []);
 
   const handleCreate = async () => {
     if (!name || !max) { setErr("Device name and max value required"); return; }
     try {
-      await DevicesApi.create({ name, maximConsumptionValue: max });
-      setName(""); setMax(0); setErr("");
+      await DevicesApi.create({ name, maximConsumptionValue: max, userId: userId === "" ? undefined : userId });
+      setName(""); setMax(0); setUserId(""); setErr("");
       await load();
     } catch (e: any) {
       setErr(e?.response?.data?.message ?? "Error creating device");
@@ -29,9 +36,13 @@ export default function DevicesPage(){
       <div style={{ background: "#f8f9fa", borderRadius: 12, boxShadow: "0 2px 8px #0001", padding: 24, marginBottom: 32 }}>
         <h3 style={{ marginBottom: 16 }}>Add New Device</h3>
         {err && <div style={{ color: "crimson", marginBottom: 8 }}>{err}</div>}
-        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr auto", gap: 12 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr 1fr auto", gap: 12 }}>
           <input placeholder="Device name" value={name} onChange={e=>setName(e.target.value)} style={{ padding: 8, borderRadius: 6, border: "1px solid #ccc" }} />
           <input placeholder="Max consumption (W)" type="number" value={max} onChange={e=>setMax(parseInt(e.target.value||"0"))} style={{ padding: 8, borderRadius: 6, border: "1px solid #ccc" }} />
+          <select value={userId} onChange={e=>setUserId(e.target.value === "" ? "" : parseInt(e.target.value))} style={{ padding: 8, borderRadius: 6, border: "1px solid #ccc" }}>
+            <option value="">No user</option>
+            {users.map(u => <option key={u.id} value={u.id}>{u.username} (#{u.id})</option>)}
+          </select>
           <button onClick={handleCreate} style={{ padding: "8px 16px", borderRadius: 6, background: "#007bff", color: "#fff", border: "none", cursor: "pointer" }}>Create</button>
         </div>
       </div>

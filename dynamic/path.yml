@@ -1,0 +1,39 @@
+http:
+  # Define URL routing rules, middlewares, and services
+  routers:
+    nginx-frontend:
+      rule: "Host(`localhost`)" # Match requests to localhost without /api prefix
+      entryPoints:
+        - web # Listen on the web (HTTP) entry point
+      service: nginx # Forward to the nginx service
+
+    backend-api:
+      rule: "Host(`localhost`) && PathPrefix(`/api`)" # Match requests to localhost with /api prefix
+      entryPoints:
+        - web # Listen on the web (HTTP) entry point
+      middlewares:
+        - auth-basic # Apply basic auth middleware
+        - strip-api-prefix # Remove /api prefix before forwarding
+      service: api-service
+
+  middlewares:
+    strip-api-prefix: # Middleware to remove /api prefix
+      stripPrefix:
+        prefixes:
+          - "/api"
+
+    auth-basic: # Middleware for basic authentication
+      basicAuth:
+        users:
+          - "user:$apr1$H6uskkkW$IgXLP6ewTrSuBkTrqE8wj/" # password = "test"
+
+  services:
+    nginx:
+      loadBalancer:
+        servers:
+          - url: "http://nginx:80" # Container name solved by Docker DNS
+
+    api-service:
+      loadBalancer:
+        servers:
+          - url: "http://backend:5000" # Container name solved by Docker DNS
