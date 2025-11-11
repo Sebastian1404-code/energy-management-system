@@ -35,7 +35,7 @@ public class AuthController {
     public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         Optional<UserEntity> userOpt = userRepository.findByUsername(request.getUsername());
         if (userOpt.isEmpty()) {
-            return ResponseEntity.status(401).body("Invalid username or password");
+            return ResponseEntity.status(401).body("No username found");
         }
 
         UserEntity user = userOpt.get();
@@ -45,10 +45,10 @@ public class AuthController {
 
         // In a real app, generate a JWT here
 
-        return ResponseEntity.ok(new LoginResponse(generateToken(user.getUsername(),user.getRole().name(),"mydevsecret123")));
+        return ResponseEntity.ok(new LoginResponse(generateToken(user.getUsername(),user.getRole().name())));
     }
 
-    public String generateToken(String username, String role, String secretKey) {
+    public String generateToken(String username, String role) {
         long expirationMillis = 3600_000; // 1 hour
         return Jwts.builder()
                 .setSubject(username)

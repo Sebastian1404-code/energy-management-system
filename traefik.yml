@@ -1,39 +1,33 @@
-http:
-  # Define URL routing rules, middlewares, and services
-  routers:
-    nginx-frontend:
-      rule: "Host(`localhost`)" # Match requests to localhost without /api prefix
-      entryPoints:
-        - web # Listen on the web (HTTP) entry point
-      service: nginx # Forward to the nginx service
+# Logging configuration
+log:
+  level: INFO
 
-    backend-api:
-      rule: "Host(`localhost`) && PathPrefix(`/api`)" # Match requests to localhost with /api prefix
-      entryPoints:
-        - web # Listen on the web (HTTP) entry point
-      middlewares:
-        - auth-basic # Apply basic auth middleware
-        - strip-api-prefix # Remove /api prefix before forwarding
-      service: api-service
+accessLog:
+  filePath: "/var/log/traefik/access.log" # Path to access log file
+  format: common
 
-  middlewares:
-    strip-api-prefix: # Middleware to remove /api prefix
-      stripPrefix:
-        prefixes:
-          - "/api"
+# Enable the Traefik dashboard and API
+api:
+  dashboard: true
+  insecure: true # Allows access to the dashboard without authentication (not recommended for production)
 
-    auth-basic: # Middleware for basic authentication
-      basicAuth:
-        users:
-          - "user:$apr1$H6uskkkW$IgXLP6ewTrSuBkTrqE8wj/" # password = "test"
+# Define entry points for HTTP and HTTPS
+entryPoints:
+  web:
+    address: ":80"
 
-  services:
-    nginx:
-      loadBalancer:
-        servers:
-          - url: "http://nginx:80" # Container name solved by Docker DNS
+    # Enables HTTPS
+    # websecure:
+    # address: ":443"
 
-    api-service:
-      loadBalancer:
-        servers:
-          - url: "http://backend:5000" # Container name solved by Docker DNS
+
+# Configure providers (where Traefik gets routing info)
+providers:
+  # Docker provider - auto-discover containers with labels
+  docker:
+    exposedByDefault: false # Only expose containers with traefik.enable=true
+    network: proxy-network # Which Docker network to use
+  # File provider - read routing rules from files
+  file:
+    directory: "/etc/traefik/dynamic"
+    watch: true # Auto-reload when files change

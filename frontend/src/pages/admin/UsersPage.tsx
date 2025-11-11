@@ -1,7 +1,21 @@
 // src/pages/admin/UsersPage.tsx
+
 import { useEffect, useState } from "react";
 import { UsersApi } from "../../api/users";
 import type { User } from "../../api/users";
+import { useNavigate } from "react-router-dom";
+
+const navBtnStyle = {
+  padding: "8px 20px",
+  borderRadius: 8,
+  background: "#6c63ff",
+  color: "#fff",
+  border: "none",
+  fontWeight: 500,
+  fontSize: 16,
+  cursor: "pointer",
+  boxShadow: "0 2px 8px #6c63ff22"
+};
 
 export default function UsersPage(){
   const [rows, setRows] = useState<User[]>([]);
@@ -9,6 +23,7 @@ export default function UsersPage(){
   const [role, setRole] = useState<"ADMIN"|"CLIENT">("CLIENT");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState("");
+  const nav = useNavigate();
 
   const load = async () => setRows(await UsersApi.list());
   useEffect(() => { load(); }, []);
@@ -27,6 +42,10 @@ export default function UsersPage(){
   return (
     <div style={{ padding: 24, maxWidth: 600, margin: "0 auto" }}>
       <h2 style={{ textAlign: "center", marginBottom: 24 }}>User Management</h2>
+      <div style={{ display: "flex", gap: 12, justifyContent: "center", marginBottom: 24 }}>
+        <button onClick={()=>nav("/admin/devices")} style={navBtnStyle}>Go to Devices</button>
+        <button onClick={()=>nav("/admin/assignments")} style={navBtnStyle}>Go to Assignments</button>
+      </div>
       <div style={{ background: "#f8f9fa", borderRadius: 12, boxShadow: "0 2px 8px #0001", padding: 24, marginBottom: 32 }}>
         <h3 style={{ marginBottom: 16 }}>Create New User</h3>
         {err && <div style={{ color: "crimson", marginBottom: 8 }}>{err}</div>}

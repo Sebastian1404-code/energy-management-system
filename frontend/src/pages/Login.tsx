@@ -23,12 +23,50 @@ export default function Login() {
   };
 
   return (
-    <form onSubmit={submit} style={{ maxWidth: 360, margin: "64px auto", display: "grid", gap: 12 }}>
-      <h2>Sign in</h2>
-      {err && <div style={{ color: "crimson" }}>{err}</div>}
-      <input placeholder="Username" value={username} onChange={e=>setU(e.target.value)} />
-      <input placeholder="Password" type="password" value={password} onChange={e=>setP(e.target.value)} />
-      <button type="submit">Login</button>
-    </form>
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(120deg, #007bff 0%, #6c63ff 100%)" }}>
+      <form onSubmit={submit} style={{
+        width: 360,
+        background: "#fff",
+        borderRadius: 16,
+        boxShadow: "0 4px 24px #0002",
+        padding: 32,
+        display: "grid",
+        gap: 18,
+        alignItems: "center"
+      }}>
+        <h2 style={{ textAlign: "center", color: "#007bff", marginBottom: 8, letterSpacing: 1 }}>Sign In</h2>
+        {err && <div style={{ color: "crimson", textAlign: "center", fontWeight: 500 }}>{err}</div>}
+        <input
+          placeholder="Username"
+          value={username}
+          onChange={e=>setU(e.target.value)}
+          style={{ padding: 12, borderRadius: 8, border: "1px solid #ddd", fontSize: 16 }}
+          autoFocus
+        />
+        <input
+          placeholder="Password"
+          type="password"
+          value={password}
+          onChange={e=>setP(e.target.value)}
+          style={{ padding: 12, borderRadius: 8, border: "1px solid #ddd", fontSize: 16 }}
+        />
+        <button
+          type="submit"
+          style={{
+            padding: "12px 0",
+            borderRadius: 8,
+            background: "linear-gradient(90deg, #007bff 0%, #6c63ff 100%)",
+            color: "#fff",
+            fontWeight: 600,
+            fontSize: 17,
+            border: "none",
+            cursor: "pointer",
+            boxShadow: "0 2px 8px #007bff33"
+          }}
+        >
+          Login
+        </button>
+      </form>
+    </div>
   );
 }

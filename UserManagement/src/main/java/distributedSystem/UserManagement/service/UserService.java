@@ -49,5 +49,14 @@ public class UserService {
 
     public void deleteUser(Long id) {
         userRepository.deleteById(id);
+        producer.publishUserDeletedEvent(id);
     }
+
+    public Optional<Long> getUserIdByUsername(String username) {
+        System.out.println(username);
+        return userRepository.findByUsername(username)
+                .map(UserEntity::getId);
+    }
+
+
 }

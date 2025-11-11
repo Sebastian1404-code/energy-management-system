@@ -11,11 +11,14 @@ services:
       - "5432:5432"
     volumes:
       - pgdata-user:/var/lib/postgresql/data
+    networks:
+      - proxy-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
+
 
   postgres-device:
     image: postgres:latest
@@ -28,11 +31,34 @@ services:
       - "5433:5432"  # separate host port for second DB
     volumes:
       - pgdata-device:/var/lib/postgresql/data
+    networks:
+      - proxy-network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
+
+
+  postgres-credential:
+    image: postgres:latest
+    container_name: postgres-credential
+    environment:
+      POSTGRES_DB: CredentialDb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Sebi1404
+    ports:
+      - "5434:5432"  # separate host port for credential DB
+    volumes:
+      - pgdata-credential:/var/lib/postgresql/data
+    networks:
+      - proxy-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 
 
   kafka:
@@ -46,6 +72,8 @@ services:
     volumes:
       - kafka-data:/var/lib/kafka/data
       - ./kafka/kraft/server.properties:/opt/kafka/config/kraft/server.properties:ro
+    networks:
+      - proxy-network
     healthcheck:
       test: [ "CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 >/dev/null 2>&1 || exit 1" ]
       interval: 10s
@@ -74,13 +102,12 @@ services:
       kafka:
         condition: service_healthy
     environment:
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-user:5432/UserDb
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: Sebi1404
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-    ports:
-      - "8081:8080"  # expose to host
     networks:
       - proxy-network
 
@@ -95,17 +122,15 @@ services:
       kafka:
         condition: service_healthy
     environment:
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-device:5432/DeviceDb
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: Sebi1404
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
-    ports:
-      - "8082:8080"
     networks:
       - proxy-network
 
-    # ... your existing postgres-user, postgres-device, kafka, user-service, device-service ...
 
   web:
     build:
@@ -119,30 +144,28 @@ services:
         condition: service_started
       device-service:
         condition: service_started
-    ports:
-      - "8080:80"       # open http://localhost:8080
     networks:
       - proxy-network
 
-#  traefik:
-#    image: traefik:v3.0
-#    container_name: traefik
-#    restart: always
-#    ports:
-#      - "80:80" # The HTTP port
-#      # - "443:443" # The HTTPS port
-#      - "8080:8080" # Dashboard port
-#    volumes:
-#      - "/var/run/docker.sock:/var/run/docker.sock:ro" # Traefik can listen to the Docker events
-#      - "./traefik.yml:/etc/traefik/traefik.yml:ro" # Static configuration file
-#      - "./dynamic:/etc/traefik/dynamic:ro" # Dynamic configuration files
-#      - "./logs:/var/log/traefik" # Log files
+  traefik:
+    image: traefik:v3.0
+    container_name: traefik
+    restart: always
+    ports:
+      - "80:80" # The HTTP port
+      # - "443:443" # The HTTPS port
+      - "8080:8080" # Dashboard port
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro" # Traefik can listen to the Docker events
+      - "./traefik.yml:/etc/traefik/traefik.yml:ro" # Static configuration file
+      - "./dynamic:/etc/traefik/dynamic:ro" # Dynamic configuration files
+      - "./logs:/var/log/traefik" # Log files
 #    develop: # Enable live reload of dynamic configuration files on Windows, if using Unix based system needs to be commented out
 #      watch:
 #        - path: ./dynamic                   # watch the whole folder
 #          action: restart
-#    networks:
-#      - proxy-network
+    networks:
+      - proxy-network
 
 
 volumes:

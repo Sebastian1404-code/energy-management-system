@@ -17,4 +17,10 @@ public class UserSyncService {
         repo.findById(userId).orElseGet(() -> repo.save(DeviceUserRef.builder().userId(userId).build()));
     }
 
+    public void handleUserDeleted(Long userId)
+    {
+        repo.findById(userId)
+                .ifPresent(repo::delete);
+    }
+
 }

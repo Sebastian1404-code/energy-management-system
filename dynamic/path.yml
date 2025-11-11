@@ -1,39 +1,58 @@
 http:
-  # Define URL routing rules, middlewares, and services
   routers:
-    nginx-frontend:
-      rule: "Host(`localhost`)" # Match requests to localhost without /api prefix
-      entryPoints:
-        - web # Listen on the web (HTTP) entry point
-      service: nginx # Forward to the nginx service
+    # --- APIs (more specific rules) ---
+    users-api:
+      rule: "Host(`localhost`) && PathPrefix(`/api/users`)"
+      entryPoints: [web]
+      middlewares: [strip-api-prefix]
+      service: users-svc
+      priority: 100
 
-    backend-api:
-      rule: "Host(`localhost`) && PathPrefix(`/api`)" # Match requests to localhost with /api prefix
-      entryPoints:
-        - web # Listen on the web (HTTP) entry point
-      middlewares:
-        - auth-basic # Apply basic auth middleware
-        - strip-api-prefix # Remove /api prefix before forwarding
-      service: api-service
+    auth-api:
+      rule: "Host(`localhost`) && PathPrefix(`/api/auth`)"
+      entryPoints: [ web ]
+      middlewares: [ strip-api-prefix ]
+      service: users-svc
+      priority: 100
+
+    devices-api:
+      rule: "Host(`localhost`) && PathPrefix(`/api/devices`)"
+      entryPoints: [web]
+      middlewares: [strip-api-prefix]
+      service: devices-svc
+      priority: 100
+
+    # --- Frontend SPA (catch-all) ---
+    frontend:
+      rule: "Host(`172.20.10.3`) || Host(`localhost`)"
+      entryPoints: [web]
+      service: web-svc
+      priority: 1
 
   middlewares:
-    strip-api-prefix: # Middleware to remove /api prefix
+    strip-api-prefix:
       stripPrefix:
         prefixes:
           - "/api"
 
+
     auth-basic: # Middleware for basic authentication
       basicAuth:
         users:
-          - "user:$apr1$H6uskkkW$IgXLP6ewTrSuBkTrqE8wj/" # password = "test"
+          - "test:$apr1$H6uskkkW$IgXLP6ewTrSuBkTrqE8wj/" # password = "test"
 
   services:
-    nginx:
+    web-svc:
       loadBalancer:
         servers:
-          - url: "http://nginx:80" # Container name solved by Docker DNS
+          - url: "http://web:80"
 
-    api-service:
+    users-svc:
       loadBalancer:
         servers:
-          - url: "http://backend:5000" # Container name solved by Docker DNS
+          - url: "http://user-service:8080"
+
+    devices-svc:
+      loadBalancer:
+        servers:
+          - url: "http://device-service:8080"
