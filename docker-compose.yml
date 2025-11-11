@@ -132,6 +132,24 @@ services:
       - proxy-network
 
 
+  authorization-service:
+    build:
+      context: ./Authorization
+    container_name: authorization-service
+    depends_on:
+      postgres-credential:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-credential:5432/CredentialDb
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: Sebi1404
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+    networks:
+      - proxy-network
+
+
+
   web:
     build:
       context: ./frontend
@@ -171,6 +189,7 @@ services:
 volumes:
   pgdata-user:
   pgdata-device:
+  pgdata-credential:
   kafka-data:
 
 

@@ -1,29 +1,31 @@
-// src/pages/Login.tsx
+// src/pages/Register.tsx
 import { useState } from "react";
-import { useAuth } from "../auth/AuthContext";
-import { loginApi } from "../api/auth";
 import { useNavigate } from "react-router-dom";
+import { registerApi } from "../api/auth";
 
-export default function Login() {
+export default function Register() {
   const [username, setU] = useState("");
   const [password, setP] = useState("");
-  const [err, setErr] = useState(""); 
-  const { login } = useAuth(); 
+  const [role, setRole] = useState<"CLIENT"|"ADMIN">("CLIENT");
+  const [err, setErr] = useState("");
+  const [success, setSuccess] = useState("");
   const nav = useNavigate();
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const { token } = await loginApi(username, password);
-      login(token);
-      nav("/"); // go to dashboard
+      await registerApi(username, password, role);
+      setSuccess("Registration successful! You can now log in.");
+      setErr("");
+      setTimeout(() => nav("/login"), 1200);
     } catch (e: any) {
-      setErr(e?.response?.data?.message ?? "Login failed");
+      setErr(e?.response?.data?.message ?? "Registration failed");
+      setSuccess("");
     }
   };
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(120deg, #007bff 0%, #6c63ff 100%)" }}>
+    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(120deg, #6c63ff 0%, #007bff 100%)" }}>
       <form onSubmit={submit} style={{
         width: 360,
         background: "#fff",
@@ -34,8 +36,9 @@ export default function Login() {
         gap: 18,
         alignItems: "center"
       }}>
-        <h2 style={{ textAlign: "center", color: "#007bff", marginBottom: 8, letterSpacing: 1 }}>Sign In</h2>
+        <h2 style={{ textAlign: "center", color: "#6c63ff", marginBottom: 8, letterSpacing: 1 }}>Register</h2>
         {err && <div style={{ color: "crimson", textAlign: "center", fontWeight: 500 }}>{err}</div>}
+        {success && <div style={{ color: "#28a745", textAlign: "center", fontWeight: 500 }}>{success}</div>}
         <input
           placeholder="Username"
           value={username}
@@ -50,25 +53,29 @@ export default function Login() {
           onChange={e=>setP(e.target.value)}
           style={{ padding: 12, borderRadius: 8, border: "1px solid #ddd", fontSize: 16 }}
         />
+        <select value={role} onChange={e=>setRole(e.target.value as any)} style={{ padding: 12, borderRadius: 8, border: "1px solid #ddd", fontSize: 16 }}>
+          <option value="CLIENT">CLIENT</option>
+          <option value="ADMIN">ADMIN</option>
+        </select>
         <button
           type="submit"
           style={{
             padding: "12px 0",
             borderRadius: 8,
-            background: "linear-gradient(90deg, #007bff 0%, #6c63ff 100%)",
+            background: "linear-gradient(90deg, #6c63ff 0%, #007bff 100%)",
             color: "#fff",
             fontWeight: 600,
             fontSize: 17,
             border: "none",
             cursor: "pointer",
-            boxShadow: "0 2px 8px #007bff33"
+            boxShadow: "0 2px 8px #6c63ff33"
           }}
         >
-          Login
+          Register
         </button>
         <button
           type="button"
-          onClick={() => nav("/register")}
+          onClick={() => nav("/login")}
           style={{
             padding: "8px 0",
             borderRadius: 8,
@@ -81,7 +88,7 @@ export default function Login() {
             marginTop: 4
           }}
         >
-          Don't have an account? Register
+          Already have an account? Login
         </button>
       </form>
     </div>

@@ -12,7 +12,7 @@ http:
       rule: "Host(`localhost`) && PathPrefix(`/api/auth`)"
       entryPoints: [ web ]
       middlewares: [ strip-api-prefix ]
-      service: users-svc
+      service: authorization-svc
       priority: 100
 
     devices-api:
@@ -56,3 +56,9 @@ http:
       loadBalancer:
         servers:
           - url: "http://device-service:8080"
+
+    authorization-svc:
+      loadBalancer:
+        servers:
+          - url: "http://authorization-service:8080"
+
