@@ -136,15 +136,14 @@ services:
     build:
       context: ./Authorization
     container_name: authorization-service
-    depends_on:
-      postgres-credential:
-        condition: service_healthy
     environment:
-      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-credential:5432/CredentialDb
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: Sebi1404
-      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+      JWT_SECRET: "d6f1b5c1c91f4b93b77b59fef9d9d56d4cb6abeb4f2769d7f3d6df6efb2d8a4b"
+    depends_on:
+      postgres-credential:
+        condition: service_healthy
     networks:
       - proxy-network
 

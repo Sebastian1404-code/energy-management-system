@@ -1,12 +1,11 @@
 package distributedSystem.Authorization.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import jakarta.validation.constraints.NotBlank;
+
 
 @Entity
 @Data
@@ -17,8 +16,21 @@ public class Credential {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // userId generated/owned by User Service
+    private Long userId;
+
+
+    @NotBlank
+    @Column(nullable = false, unique = true)
     private String username;
-    private String password;
-    private String role;
+
+    // BCrypt hash
+    @NotBlank
+    @Column(nullable = false)
+    private String passwordHash;
+
+    @NotBlank
+    @Column(nullable = false)
+    private String role; // "CLIENT" | "ADMIN"
 }
 

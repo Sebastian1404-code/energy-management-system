@@ -5,8 +5,8 @@ import { registerApi } from "../api/auth";
 
 export default function Register() {
   const [username, setU] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setP] = useState("");
-  const [role, setRole] = useState<"CLIENT"|"ADMIN">("CLIENT");
   const [err, setErr] = useState("");
   const [success, setSuccess] = useState("");
   const nav = useNavigate();
@@ -14,7 +14,7 @@ export default function Register() {
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await registerApi(username, password, role);
+      await registerApi(username, email, password);
       setSuccess("Registration successful! You can now log in.");
       setErr("");
       setTimeout(() => nav("/login"), 1200);
@@ -47,16 +47,19 @@ export default function Register() {
           autoFocus
         />
         <input
+          placeholder="Email"
+          type="email"
+          value={email}
+          onChange={e=>setEmail(e.target.value)}
+          style={{ padding: 12, borderRadius: 8, border: "1px solid #ddd", fontSize: 16 }}
+        />
+        <input
           placeholder="Password"
           type="password"
           value={password}
           onChange={e=>setP(e.target.value)}
           style={{ padding: 12, borderRadius: 8, border: "1px solid #ddd", fontSize: 16 }}
         />
-        <select value={role} onChange={e=>setRole(e.target.value as any)} style={{ padding: 12, borderRadius: 8, border: "1px solid #ddd", fontSize: 16 }}>
-          <option value="CLIENT">CLIENT</option>
-          <option value="ADMIN">ADMIN</option>
-        </select>
         <button
           type="submit"
           style={{

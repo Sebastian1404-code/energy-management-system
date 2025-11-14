@@ -9,6 +9,7 @@ import UsersPage from "./pages/admin/UsersPage";
 import DevicesPage from "./pages/admin/DevicesPage";
 import AssignmentsPage from "./pages/admin/AssignmentsPage";
 import MyDevicesPage from "./pages/client/MyDevicesPage";
+import Register from "./pages/Register";
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
         <RouteButtons />
         <Routes>
           <Route path="/login" element={<Login/>}/>
+          <Route path="/register" element={<Register/>}/>
           <Route element={<RequireAuth/>}>
             <Route index element={<Dashboard/>} />
             <Route element={<RequireRole allowed={["ADMIN"]} />}>

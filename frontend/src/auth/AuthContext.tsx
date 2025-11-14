@@ -3,12 +3,13 @@ import React, { createContext, useContext, useMemo, useState } from "react";
 import {jwtDecode} from "jwt-decode";
 
 type Role = "ADMIN" | "CLIENT";
-type Decoded = { sub: string; roles?: Role[] | string[]; exp?: number };
+type Decoded = { sub: string; username?: string; role?: Role | string; exp?: number };
 
 type AuthState = {
   token: string | null;
   role: Role | null;
   username: string | null;
+  userId: string | null;
   login: (token: string) => void;
   logout: () => void;
 };
@@ -22,19 +23,20 @@ export const AuthProvider: React.FC<{children: React.ReactNode}> = ({ children }
     try { return jwtDecode(token) as Decoded; } catch { return null; }
   }, [token]);
 
-  // Extract a single role (string) from decoded.roles
+  // Extract role from decoded.role
   const role: Role | null = useMemo(() => {
-    const r = decoded?.roles;
-    return r ? (Array.isArray(r) ? r[0] as Role : r as Role) : null;
+    const r = decoded?.role;
+    return r ? (r as Role) : null;
   }, [decoded]);
 
-  const username = decoded?.sub ?? null;
+  const username = decoded?.username ?? null;
+  const userId = decoded?.sub ?? null;
 
   const login = (t: string) => { localStorage.setItem("token", t); setToken(t); };
   const logout = () => { localStorage.removeItem("token"); setToken(null); };
 
   return (
-    <AuthCtx.Provider value={{ token, role, username, login, logout }}>
+    <AuthCtx.Provider value={{ token, role, username, userId, login, logout }}>
       {children}
     </AuthCtx.Provider>
   );

@@ -1,5 +1,6 @@
 package distributedSystem.UserManagement.controller;
 
+import distributedSystem.UserManagement.dto.CreateUserResponse;
 import distributedSystem.UserManagement.model.UserEntity;
 import distributedSystem.UserManagement.service.UserService;
 import org.springframework.http.ResponseEntity;
@@ -37,9 +38,9 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<UserEntity> createUser(@RequestBody UserEntity user) {
+    public ResponseEntity<CreateUserResponse> createUser(@RequestBody UserEntity user) {
         UserEntity saved = userService.createUser(user);
-        return ResponseEntity.ok(saved);
+        return ResponseEntity.ok(new CreateUserResponse(saved.getId()));
     }
 
     @PutMapping("/{id}")

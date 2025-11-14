@@ -31,7 +31,6 @@ public class UserService {
         user.setId(null);
         UserEntity saved = userRepository.save(user);
 
-        // After saving, publish event to Kafka
         producer.publishUserCreatedEvent(saved.getId());
 
         return saved;
@@ -41,7 +40,7 @@ public class UserService {
         return userRepository.findById(id)
                 .map(existing -> {
                     existing.setUsername(updatedUser.getUsername());
-                    existing.setPassword(updatedUser.getPassword());
+                    existing.setRole(updatedUser.getRole());
                     return userRepository.save(existing);
                 })
                 .orElseThrow(() -> new RuntimeException("User not found"));

@@ -11,17 +11,18 @@ import java.util.UUID;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class UserEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
-
     private String username;
-    private String password;
 
-    private Role role;
+
+    private String email;
+
+    private Role role; // CLIENT, ADMIN, etc.
 
 
 

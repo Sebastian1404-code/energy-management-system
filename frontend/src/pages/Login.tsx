@@ -1,5 +1,5 @@
 // src/pages/Login.tsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "../auth/AuthContext";
 import { loginApi } from "../api/auth";
 import { useNavigate } from "react-router-dom";
@@ -8,7 +8,8 @@ export default function Login() {
   const [username, setU] = useState("");
   const [password, setP] = useState("");
   const [err, setErr] = useState(""); 
-  const { login } = useAuth(); 
+  const [pendingLogin, setPendingLogin] = useState(false);
+  const { login, role } = useAuth(); 
   const nav = useNavigate();
 
   const submit = async (e: React.FormEvent) => {
@@ -16,11 +17,19 @@ export default function Login() {
     try {
       const { token } = await loginApi(username, password);
       login(token);
-      nav("/"); // go to dashboard
+      setPendingLogin(true);
     } catch (e: any) {
       setErr(e?.response?.data?.message ?? "Login failed");
     }
   };
+
+  useEffect(() => {
+    if (!pendingLogin) return;
+    if (role === "ADMIN") nav("/admin/users");
+    else if (role === "CLIENT") nav("/me/devices");
+    else if (role) nav("/");
+    if (role) setPendingLogin(false);
+  }, [role, nav, pendingLogin]);
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(120deg, #007bff 0%, #6c63ff 100%)" }}>

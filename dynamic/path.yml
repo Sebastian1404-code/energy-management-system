@@ -4,7 +4,7 @@ http:
     users-api:
       rule: "Host(`localhost`) && PathPrefix(`/api/users`)"
       entryPoints: [web]
-      middlewares: [strip-api-prefix]
+      middlewares: [strip-api-prefix, jwt-auth]
       service: users-svc
       priority: 100
 
@@ -18,7 +18,7 @@ http:
     devices-api:
       rule: "Host(`localhost`) && PathPrefix(`/api/devices`)"
       entryPoints: [web]
-      middlewares: [strip-api-prefix]
+      middlewares: [strip-api-prefix,jwt-auth]
       service: devices-svc
       priority: 100
 
@@ -34,6 +34,14 @@ http:
       stripPrefix:
         prefixes:
           - "/api"
+    jwt-auth:
+      forwardAuth:
+        address: "http://authorization-service:8080/auth/validate"
+        trustForwardHeader: true
+        authResponseHeaders:
+          - X-User-Id
+          - X-Username
+          - X-Role
 
 
     auth-basic: # Middleware for basic authentication

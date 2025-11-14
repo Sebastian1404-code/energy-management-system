@@ -3,7 +3,7 @@ import { useAuth } from "../auth/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 export default function Dashboard() {
-  const { username, role, logout } = useAuth();
+  const { username, userId, role, logout } = useAuth();
   const nav = useNavigate();
 
   return (
@@ -15,9 +15,14 @@ export default function Dashboard() {
         Log Out
       </button>
       <div style={{ background: "#fff", borderRadius: 16, boxShadow: "0 4px 24px #0002", padding: 40, minWidth: 340, textAlign: "center" }}>
-        <h2 style={{ color: "#007bff", marginBottom: 12, letterSpacing: 1 }}>Welcome, {username}</h2>
+        <h2 style={{ color: "#007bff", marginBottom: 12, letterSpacing: 1 }}>
+          Welcome{username ? `, ${username}` : userId ? ` (ID: ${userId})` : ""}
+        </h2>
+        <div style={{ fontSize: 16, color: "#888", marginBottom: 8 }}>
+          {userId && (!username || username === userId) ? `User ID: ${userId}` : null}
+        </div>
         <div style={{ fontSize: 18, color: "#444", marginBottom: 8 }}>Your role:</div>
-        <div style={{ fontWeight: 600, fontSize: 20, color: "#6c63ff", marginBottom: 24 }}>{role || "none"}</div>
+        <div style={{ fontWeight: 600, fontSize: 20, color: "#6c63ff", marginBottom: 24 }}>{role ?? "none"}</div>
         <div style={{ color: "#888", fontSize: 15 }}>Use the navigation bar above to access your pages.</div>
       </div>
     </div>
