@@ -20,6 +20,7 @@ const navBtnStyle = {
 export default function UsersPage(){
   const [rows, setRows] = useState<User[]>([]);
   const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
   const [role, setRole] = useState<"ADMIN"|"CLIENT">("CLIENT");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState("");
@@ -29,10 +30,10 @@ export default function UsersPage(){
   useEffect(() => { load(); }, []);
 
   const handleCreate = async () => {
-    if (!name || !password) { setErr("Username and password required"); return; }
+    if (!name || !email || !password) { setErr("Username, email and password required"); return; }
     try {
-      await UsersApi.create({ username: name, role, password });
-      setName(""); setPassword(""); setErr("");
+      await UsersApi.create({ username: name, email, role, password });
+      setName(""); setEmail(""); setPassword(""); setErr("");
       await load();
     } catch (e: any) {
       setErr(e?.response?.data?.message ?? "Error creating user");
@@ -51,6 +52,7 @@ export default function UsersPage(){
         {err && <div style={{ color: "crimson", marginBottom: 8 }}>{err}</div>}
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr auto", gap: 12 }}>
           <input placeholder="Username" value={name} onChange={e=>setName(e.target.value)} style={{ padding: 8, borderRadius: 6, border: "1px solid #ccc" }} />
+          <input placeholder="Email" value={email} onChange={e=>setEmail(e.target.value)} style={{ padding: 8, borderRadius: 6, border: "1px solid #ccc" }} />
           <input placeholder="Password" type="password" value={password} onChange={e=>setPassword(e.target.value)} style={{ padding: 8, borderRadius: 6, border: "1px solid #ccc" }} />
           <select value={role} onChange={e=>setRole(e.target.value as any)} style={{ padding: 8, borderRadius: 6, border: "1px solid #ccc" }}>
             <option value="CLIENT">CLIENT</option>

@@ -19,7 +19,7 @@ public class Device {
     private String name;
     private int maximConsumptionValue;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
     @JoinColumn(
             name = "user_id",                      // FK column on devices
             referencedColumnName = "user_id",      // PK column on device_user_refs

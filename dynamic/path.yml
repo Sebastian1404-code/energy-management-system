@@ -1,5 +1,25 @@
 http:
   routers:
+    users-swagger:
+      rule: "Host(`localhost`) && (PathPrefix(`/api/users/swagger-ui`) || PathPrefix(`/api/users/v3/api-docs`))"
+      entryPoints: [ web ]
+      middlewares: [ strip-users ]
+      service: users-svc
+      priority: 110
+
+    devices-swagger:
+      rule: "Host(`localhost`) && (PathPrefix(`/api/devices/swagger-ui`) || PathPrefix(`/api/devices/v3/api-docs`))"
+      entryPoints: [ web ]
+      middlewares: [ strip-devices ]
+      service: devices-svc
+      priority: 110
+
+    auth-swagger:
+      rule: "Host(`localhost`) && (PathPrefix(`/api/auth/swagger-ui`) || PathPrefix(`/api/auth/v3/api-docs`))"
+      entryPoints: [ web ]
+      middlewares: [ strip-auth ]
+      service: authorization-svc
+      priority: 110
     # --- APIs (more specific rules) ---
     users-api:
       rule: "Host(`localhost`) && PathPrefix(`/api/users`)"
@@ -34,6 +54,18 @@ http:
       stripPrefix:
         prefixes:
           - "/api"
+    strip-users:
+      stripPrefix:
+        prefixes: [ "/api/users" ]
+    strip-devices:
+      stripPrefix:
+        prefixes: [ "/api/devices" ]
+    strip-auth:
+      stripPrefix:
+        prefixes: [ "/api/auth" ]
+
+
+
     jwt-auth:
       forwardAuth:
         address: "http://authorization-service:8080/auth/validate"

@@ -1,10 +1,13 @@
 package distributedSystem.UserManagement.controller;
 
-import distributedSystem.UserManagement.dto.CreateUserResponse;
+import distributedSystem.UserManagement.dto.*;
 import distributedSystem.UserManagement.model.UserEntity;
 import distributedSystem.UserManagement.service.UserService;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 import java.util.*;
 
@@ -13,9 +16,11 @@ import java.util.*;
 public class UserController {
 
     private final UserService userService;
+    private final WebClient authWebClient;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService, WebClient authWebClient) {
         this.userService = userService;
+        this.authWebClient = authWebClient;
     }
 
     @GetMapping
@@ -24,8 +29,8 @@ public class UserController {
     }
 
     @PostMapping("/id-by-username")
-    public ResponseEntity<Long> getUserIdByUsername(@RequestBody String username) {
-        Optional<Long> userOpt = userService.getUserIdByUsername(username);
+    public ResponseEntity<Long> getUserIdByUsername(@RequestBody UsernameDTO username) {
+        Optional<Long> userOpt = userService.getUserIdByUsername(username.getUsername());
         return userOpt.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
@@ -38,9 +43,33 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<CreateUserResponse> createUser(@RequestBody UserEntity user) {
+    public ResponseEntity<?> createUser(@RequestBody CreateUserRequest user) {
         UserEntity saved = userService.createUser(user);
-        return ResponseEntity.ok(new CreateUserResponse(saved.getId()));
+        if(saved==null)
+        {
+            return ResponseEntity
+                    .status(HttpStatus.CONFLICT)
+                    .body(Map.of("message", "Username already exists"));
+        }
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(new CreateUserResponse(saved.getId()));
+    }
+
+    @PostMapping("/create")
+    public ResponseEntity<?> createUserByAdmin(@RequestBody CreateUserRequestAdmin user) {
+
+        UserEntity saved = userService.createUserAdmin(user);
+        if(saved==null)
+        {
+            return ResponseEntity
+                    .status(HttpStatus.CONFLICT)
+                    .body(Map.of("message", "Username already exists"));
+        }
+
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(new CreateUserResponse(saved.getId()));
     }
 
     @PutMapping("/{id}")

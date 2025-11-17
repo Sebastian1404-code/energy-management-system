@@ -2,7 +2,7 @@ package distributedSystem.Authorization.controller;
 
 import distributedSystem.Authorization.dto.*;
 import distributedSystem.Authorization.model.Credential;
-import distributedSystem.Authorization.repository.CredentialRepository;
+import distributedSystem.Authorization.service.CredentialService;
 import distributedSystem.Authorization.service.JwtService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
@@ -15,24 +15,22 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.client.WebClient;
 
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
 
-    private final CredentialRepository repo;
     private final PasswordEncoder passwordEncoder;
-    private final WebClient userServiceClient;
     private final JwtService jwtService;
+    private final CredentialService credentialService;
 
-    public AuthController(CredentialRepository repo,
-                          PasswordEncoder passwordEncoder,
-                          WebClient userServiceClient,
-                          JwtService jwtService) {
-        this.repo = repo;
+
+    public AuthController(PasswordEncoder passwordEncoder,
+                          JwtService jwtService, CredentialService credentialService) {
+        this.credentialService = credentialService;
         this.passwordEncoder = passwordEncoder;
-        this.userServiceClient = userServiceClient;
         this.jwtService = jwtService;
     }
 
@@ -43,35 +41,43 @@ public class AuthController {
      * 2) Store credentials with BCrypt hash and returned userId.
      */
     @PostMapping("/register")
-    @Transactional
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest req) {
-        // 1) Create (or get) user from User Service
-        CreateUserResponse created = userServiceClient.post()
-                .uri("/users")
-                .bodyValue(new CreateUserRequest(req.username(), req.email(), Role.ADMIN))
-                .retrieve()
-                .bodyToMono(CreateUserResponse.class)
-                .block();
 
-        if (created == null || created.userId() == null) {
-            return ResponseEntity.internalServerError().body("User Service did not return a userId");
-        }
 
-        // 2) Upsert credentials (idempotent on username)
-        Optional<Credential> existing = repo.findByUsername(req.username());
-        if (existing.isPresent()) {
-            // If already registered, just OK (idempotent behavior)
-            return ResponseEntity.ok("Already registered");
+        try {
+            var maybeCred = credentialService.register(req);
+
+            if (maybeCred.isEmpty()) {
+                return ResponseEntity.ok("Already registered");
+            }
+
+            var cred = maybeCred.get();
+            return ResponseEntity
+                    .status(HttpStatus.CREATED)
+                    .body(Map.of(
+                            "userId", cred.getUserId(),
+                            "username", cred.getUsername(),
+                            "message", "Registered successfully"
+                    ));
+        } catch (IllegalStateException e) {
+            // e.g., user service didn’t return an id or other expected condition failed
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
+                    .body(Map.of("message", e.getMessage()));
         }
+    }
+
+    @PostMapping("/credential")
+    public ResponseEntity<?> createCredentialByAdmin(@Valid @RequestBody CredentialRequest req) {
 
         Credential c = new Credential();
-        c.setUserId(created.userId());
-        c.setUsername(req.username());
-        c.setPasswordHash(passwordEncoder.encode(req.password()));
-        c.setRole("ADMIN");
-        repo.save(c);
+        c.setUserId(req.getUserId());
+        c.setUsername(req.getUsername());
+        c.setPasswordHash(passwordEncoder.encode(req.getPassword()));
+        c.setRole(req.getRole());
+        credentialService.save(c);
 
-        return ResponseEntity.ok("Registered successfully");
+        return ResponseEntity.ok("Credentials for user created in administrator are registered");
+
     }
 
     /**
@@ -79,14 +85,24 @@ public class AuthController {
      */
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest req) {
-        var cred = repo.findByUsername(req.getUsername()).orElse(null);
+        var cred = credentialService.findByUsername(req.getUsername()).orElse(null);
 
         if (cred == null || !passwordEncoder.matches(req.getPassword(), cred.getPasswordHash())) {
             return ResponseEntity.status(401).body("Invalid credentials");
         }
         System.out.println(cred.getRole());
-        String token = jwtService.createToken(cred.getUserId(), cred.getUsername(), cred.getRole());
+        String token = jwtService.createToken(cred.getUserId(), cred.getUsername(), cred.getRole().toString());
         return ResponseEntity.ok(new TokenResponse(token));
+    }
+
+    @DeleteMapping("/delete/{userId}")
+    public ResponseEntity<?> deleteCredentialByUserId(@PathVariable Long userId) {
+        credentialService.deleteByUserId(userId);
+//        if (!deleted) {
+//            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+//                    .body(Map.of("message", "Credential not found for userId=" + userId));
+//        }
+        return ResponseEntity.noContent().build();
     }
 
 

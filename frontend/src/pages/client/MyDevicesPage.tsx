@@ -13,6 +13,7 @@ export default function MyDevicesPage(){
     (async () => {
       if (!username) return;
   // Get userId by username
+  console.log("Fetching userId for username:", username);
   const userId = await UsersApi.getById(username);
   // Get all devices and filter by userId
   const allDevices = await DevicesApi.list();

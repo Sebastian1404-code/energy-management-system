@@ -25,14 +25,14 @@ public class DeviceService {
         return deviceRepo.findAll().stream()
                 .map(d -> new DeviceResponse(
                         d.getId(), d.getName(), d.getMaximConsumptionValue(),
-                        d.getUserRef().getUserId()))
+                        d.getUserRef().getUser_id()))
                 .toList();
     }
 
     public DeviceResponse getById(Long id) {
         Device d = deviceRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Device not found: " + id));
-        return new DeviceResponse(d.getId(), d.getName(), d.getMaximConsumptionValue(), d.getUserRef().getUserId());
+        return new DeviceResponse(d.getId(), d.getName(), d.getMaximConsumptionValue(), d.getUserRef().getUser_id());
     }
 
     public DeviceResponse create(DeviceRequest req) {
@@ -43,7 +43,7 @@ public class DeviceService {
                 .maximConsumptionValue(req.getMaximConsumptionValue())
                 .userRef(ref)
                 .build());
-        return new DeviceResponse(saved.getId(), saved.getName(), saved.getMaximConsumptionValue(), ref.getUserId());
+        return new DeviceResponse(saved.getId(), saved.getName(), saved.getMaximConsumptionValue(), ref.getUser_id());
     }
 
 //    public DeviceResponse update(Long id, DeviceRequest req) {
@@ -76,7 +76,7 @@ public class DeviceService {
                 saved.getId(),
                 saved.getName(),
                 saved.getMaximConsumptionValue(),
-                saved.getUserRef() != null ? saved.getUserRef().getUserId() : null
+                saved.getUserRef() != null ? saved.getUserRef().getUser_id() : null
         );
     }
 

@@ -1,5 +1,6 @@
 package distributedSystem.Authorization.model;
 
+import distributedSystem.Authorization.dto.Role;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -29,8 +30,7 @@ public class Credential {
     @Column(nullable = false)
     private String passwordHash;
 
-    @NotBlank
     @Column(nullable = false)
-    private String role; // "CLIENT" | "ADMIN"
+    private Role role;
 }
 
