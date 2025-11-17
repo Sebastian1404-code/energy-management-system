@@ -10,7 +10,7 @@ import java.net.URI;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/devices")
+@RequestMapping("/devices")
 public class DeviceController {
 
     private final DeviceService service;
@@ -35,10 +35,13 @@ public class DeviceController {
         return ResponseEntity.created(URI.create("/api/devices/" + saved.getId())).body(saved);
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<DeviceResponse> update(@PathVariable Long id, @RequestBody DeviceRequest req) {
-        return ResponseEntity.ok(service.update(id, req));
+    @PutMapping("/{deviceId}")
+    public ResponseEntity<DeviceResponse> update(
+            @PathVariable Long deviceId,
+            @RequestBody Long userId) {
+        return ResponseEntity.ok(service.update(deviceId, userId));
     }
+
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {

@@ -1,0 +1,104 @@
+http:
+  routers:
+    users-swagger:
+      rule: "Host(`localhost`) && (PathPrefix(`/api/users/swagger-ui`) || PathPrefix(`/api/users/v3/api-docs`))"
+      entryPoints: [ web ]
+      middlewares: [ strip-users ]
+      service: users-svc
+      priority: 110
+
+    devices-swagger:
+      rule: "Host(`localhost`) && (PathPrefix(`/api/devices/swagger-ui`) || PathPrefix(`/api/devices/v3/api-docs`))"
+      entryPoints: [ web ]
+      middlewares: [ strip-devices ]
+      service: devices-svc
+      priority: 110
+
+    auth-swagger:
+      rule: "Host(`localhost`) && (PathPrefix(`/api/auth/swagger-ui`) || PathPrefix(`/api/auth/v3/api-docs`))"
+      entryPoints: [ web ]
+      middlewares: [ strip-auth ]
+      service: authorization-svc
+      priority: 110
+    # --- APIs (more specific rules) ---
+    users-api:
+      rule: "Host(`localhost`) && PathPrefix(`/api/users`)"
+      entryPoints: [web]
+      middlewares: [strip-api-prefix, jwt-auth]
+      service: users-svc
+      priority: 100
+
+    auth-api:
+      rule: "Host(`localhost`) && PathPrefix(`/api/auth`)"
+      entryPoints: [ web ]
+      middlewares: [ strip-api-prefix ]
+      service: authorization-svc
+      priority: 100
+
+    devices-api:
+      rule: "Host(`localhost`) && PathPrefix(`/api/devices`)"
+      entryPoints: [web]
+      middlewares: [strip-api-prefix,jwt-auth]
+      service: devices-svc
+      priority: 100
+
+    # --- Frontend SPA (catch-all) ---
+    frontend:
+      rule: "Host(`172.20.10.3`) || Host(`localhost`)"
+      entryPoints: [web]
+      service: web-svc
+      priority: 1
+
+  middlewares:
+    strip-api-prefix:
+      stripPrefix:
+        prefixes:
+          - "/api"
+    strip-users:
+      stripPrefix:
+        prefixes: [ "/api/users" ]
+    strip-devices:
+      stripPrefix:
+        prefixes: [ "/api/devices" ]
+    strip-auth:
+      stripPrefix:
+        prefixes: [ "/api/auth" ]
+
+
+
+    jwt-auth:
+      forwardAuth:
+        address: "http://authorization-service:8080/auth/validate"
+        trustForwardHeader: true
+        authResponseHeaders:
+          - X-User-Id
+          - X-Username
+          - X-Role
+
+
+    auth-basic: # Middleware for basic authentication
+      basicAuth:
+        users:
+          - "test:$apr1$H6uskkkW$IgXLP6ewTrSuBkTrqE8wj/" # password = "test"
+
+  services:
+    web-svc:
+      loadBalancer:
+        servers:
+          - url: "http://web:80"
+
+    users-svc:
+      loadBalancer:
+        servers:
+          - url: "http://user-service:8080"
+
+    devices-svc:
+      loadBalancer:
+        servers:
+          - url: "http://device-service:8080"
+
+    authorization-svc:
+      loadBalancer:
+        servers:
+          - url: "http://authorization-service:8080"
+
