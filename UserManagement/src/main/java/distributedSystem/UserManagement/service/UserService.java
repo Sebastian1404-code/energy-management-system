@@ -6,15 +6,12 @@ import distributedSystem.UserManagement.dto.CredentialRequest;
 import distributedSystem.UserManagement.events.UserEventsProducer;
 import distributedSystem.UserManagement.model.UserEntity;
 import distributedSystem.UserManagement.repository.UserRepository;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -123,10 +120,8 @@ public class UserService {
                 .toBodilessEntity()
                 .block();
         System.out.println("after");
-        // 2) Delete user locally
         userRepository.deleteById(id);
 
-        // 3) Publish event
         producer.publishUserDeletedEvent(id);
     }
 

@@ -14,8 +14,6 @@ import java.util.List;
 public class DeviceUserRef {
 
     @Id
-    @Column(name = "user_id")   // primary key equals upstream user id
+    @Column(name = "user_id")
     private Long user_id;
-
-
 }

@@ -3,17 +3,11 @@ package distributedSystem.Authorization.controller;
 import distributedSystem.Authorization.dto.*;
 import distributedSystem.Authorization.model.Credential;
 import distributedSystem.Authorization.service.CredentialService;
-import distributedSystem.Authorization.service.JwtService;
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
-import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.Map;
 import java.util.Optional;
@@ -23,15 +17,13 @@ import java.util.Optional;
 public class AuthController {
 
     private final PasswordEncoder passwordEncoder;
-    private final JwtService jwtService;
     private final CredentialService credentialService;
 
 
     public AuthController(PasswordEncoder passwordEncoder,
-                          JwtService jwtService, CredentialService credentialService) {
+                        CredentialService credentialService) {
         this.credentialService = credentialService;
         this.passwordEncoder = passwordEncoder;
-        this.jwtService = jwtService;
     }
 
     /**
@@ -42,16 +34,14 @@ public class AuthController {
      */
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest req) {
-
-
         try {
-            var maybeCred = credentialService.register(req);
+            Optional<Credential> credential = credentialService.register(req);
 
-            if (maybeCred.isEmpty()) {
+            if (credential.isEmpty()) {
                 return ResponseEntity.ok("Already registered");
             }
 
-            var cred = maybeCred.get();
+            Credential cred = credential.get();
             return ResponseEntity
                     .status(HttpStatus.CREATED)
                     .body(Map.of(
@@ -85,43 +75,26 @@ public class AuthController {
      */
     @PostMapping("/login")
     public ResponseEntity<?> login(@Valid @RequestBody LoginRequest req) {
-        var cred = credentialService.findByUsername(req.getUsername()).orElse(null);
-
-        if (cred == null || !passwordEncoder.matches(req.getPassword(), cred.getPasswordHash())) {
-            return ResponseEntity.status(401).body("Invalid credentials");
-        }
-        System.out.println(cred.getRole());
-        String token = jwtService.createToken(cred.getUserId(), cred.getUsername(), cred.getRole().toString());
-        return ResponseEntity.ok(new TokenResponse(token));
+        return credentialService.login(req)
+                .<ResponseEntity<?>>map(ResponseEntity::ok) // 200 + TokenResponse
+                .orElseGet(() -> ResponseEntity
+                        .status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("message", "Invalid credentials")));
     }
 
     @DeleteMapping("/delete/{userId}")
     public ResponseEntity<?> deleteCredentialByUserId(@PathVariable Long userId) {
         credentialService.deleteByUserId(userId);
-//        if (!deleted) {
-//            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-//                    .body(Map.of("message", "Credential not found for userId=" + userId));
-//        }
         return ResponseEntity.noContent().build();
     }
 
 
     @GetMapping("/validate")
     public ResponseEntity<Void> validate(@RequestHeader(value = "Authorization", required = false) String authHeader) {
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
-        String raw = authHeader.substring("Bearer ".length()).trim();
-        try {
-            Claims claims = jwtService.verifyAndGetClaims(raw);
-            // Build headers for Traefik to forward to services
-            HttpHeaders h = new HttpHeaders();
-            h.add("X-User-Id", claims.getSubject());                 // sub = userId
-            h.add("X-Username", String.valueOf(claims.get("username")));
-            h.add("X-Role", String.valueOf(claims.get("role")));
-            return new ResponseEntity<>(h, HttpStatus.OK);
-        } catch (JwtException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
+        return credentialService.buildForwardHeaders(authHeader)
+                .map(headers -> new ResponseEntity<Void>(headers, HttpStatus.OK))
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).build());
     }
+
+
 }

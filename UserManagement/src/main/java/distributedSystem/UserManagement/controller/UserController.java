@@ -6,8 +6,6 @@ import distributedSystem.UserManagement.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Mono;
 
 import java.util.*;
 
@@ -16,11 +14,9 @@ import java.util.*;
 public class UserController {
 
     private final UserService userService;
-    private final WebClient authWebClient;
 
-    public UserController(UserService userService, WebClient authWebClient) {
+    public UserController(UserService userService) {
         this.userService = userService;
-        this.authWebClient = authWebClient;
     }
 
     @GetMapping

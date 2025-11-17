@@ -35,10 +35,12 @@ export default function AssignmentsPage(){
     if (!selDevice || !selUser) { setErr("Select both device and user"); return; }
     try {
       await DevicesApi.assignToUser(selDevice!, selUser!);
-  setSuccess("Device assigned successfully!");
-  setErr("");
-  await load();
-  setTimeout(()=>setSuccess(""), 2000);
+      setSuccess("Device assigned successfully!");
+      setErr("");
+      setSelDevice(undefined);
+      setSelUser(undefined);
+      await load();
+      setTimeout(()=>setSuccess(""), 2000);
     } catch (e: any) {
       setErr(e?.response?.data?.message ?? "Error assigning device");
       setSuccess("");

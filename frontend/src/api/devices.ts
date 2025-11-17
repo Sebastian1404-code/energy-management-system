@@ -9,5 +9,7 @@ export const DevicesApi = {
   update: async (id: number, d: Partial<Device>) => (await deviceApi.put<Device>(`/${id}`, d)).data,
   remove: async (id: number) => deviceApi.delete(`/${id}`),
   assignToUser: async (deviceId: number, userId: number) =>
-    (await deviceApi.put<Device>(`/${deviceId}`, userId)).data,
+    (await deviceApi.put<Device>(`/${deviceId}`, userId, {
+      headers: { "Content-Type": "application/json" }
+    })).data,
 };

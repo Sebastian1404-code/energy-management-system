@@ -1,12 +1,12 @@
 package distributedSystem.Authorization.service;
 
-import distributedSystem.Authorization.dto.CreateUserRequest;
-import distributedSystem.Authorization.dto.CreateUserResponse;
-import distributedSystem.Authorization.dto.RegisterRequest;
-import distributedSystem.Authorization.dto.Role;
+import distributedSystem.Authorization.dto.*;
 import distributedSystem.Authorization.model.Credential;
 import distributedSystem.Authorization.repository.CredentialRepository;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,6 +23,7 @@ public class CredentialService {
     private final CredentialRepository credentialRepository;
     private final WebClient userServiceClient;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
 
 
@@ -36,21 +37,32 @@ public class CredentialService {
 
         Long userId = createOrGetUserId(req.username(), req.email(), Role.ADMIN);
         if (userId == null) {
-            // Convert to an unchecked exception for controller to map to 502/500
             throw new IllegalStateException("User Service did not return a userId");
         }
 
 
-        Credential c = new Credential();
-        c.setUserId(userId);
-        c.setUsername(req.username());
-        c.setPasswordHash(passwordEncoder.encode(req.password()));
-        c.setRole(Role.ADMIN);
-        Credential saved = credentialRepository.save(c);
-
-        return Optional.of(saved);
+        return createCredentialsTx(userId, req.username(), req.password(), Role.ADMIN);
 
 
+    }
+
+    @Transactional
+    protected Optional<Credential> createCredentialsTx(Long userId, String username, String rawPassword, Role role) {
+        if (credentialRepository.existsByUsername(username)) {
+            return Optional.empty();
+        }
+
+        try {
+            Credential c = new Credential();
+            c.setUserId(userId);
+            c.setUsername(username);
+            c.setPasswordHash(passwordEncoder.encode(rawPassword));
+            c.setRole(role);
+            Credential saved = credentialRepository.save(c);
+            return Optional.of(saved);
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            return Optional.empty();
+        }
     }
 
     private Long createOrGetUserId(String username, String email, Role role) {
@@ -67,18 +79,54 @@ public class CredentialService {
             return created.userId();
         }
 
-        // Already exists → fetch id by username
-        // If your endpoint is POST /users/id-by-username with body {"username": "..."}
-        Long existingId = userServiceClient.post()
+
+        return userServiceClient.post()
                 .uri("/users/id-by-username")
                 .bodyValue(Map.of("username", username))
                 .retrieve()
                 .bodyToMono(Long.class)
                 .block();
 
-        return existingId; // may be null; controller maps this via IllegalStateException above
     }
 
+
+
+    // LOGIN
+
+    @Transactional(readOnly = true)
+    public Optional<TokenResponse> login(LoginRequest req) {
+        // Find user, check password, then issue token — all in domain layer
+        return credentialRepository.findByUsername(req.getUsername())
+                .filter(cred -> passwordEncoder.matches(req.getPassword(), cred.getPasswordHash()))
+                .map(cred -> {
+                    String token = jwtService.createToken(
+                            cred.getUserId(),
+                            cred.getUsername(),
+                            cred.getRole().name()
+                    );
+                    return new TokenResponse(token);
+                });
+    }
+
+    public Optional<HttpHeaders> buildForwardHeaders(String authorizationHeader) {
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            return Optional.empty();
+        }
+
+        String raw = authorizationHeader.substring("Bearer ".length()).trim();
+        try {
+            Claims claims = jwtService.verifyAndGetClaims(raw);
+
+            HttpHeaders h = new HttpHeaders();
+            h.add("X-User-Id", claims.getSubject());                   // sub = userId
+            h.add("X-Username", String.valueOf(claims.get("username")));
+            h.add("X-Role", String.valueOf(claims.get("role")));
+            return Optional.of(h);
+
+        } catch (JwtException ex) {
+            return Optional.empty();
+        }
+    }
 
     @Transactional(readOnly = true)
     public Optional<Credential> findByUsername(String username) {
@@ -89,8 +137,6 @@ public class CredentialService {
     public void save(Credential credential) {
         credentialRepository.save(credential);
     }
-
-
 
     @Transactional
     public void deleteByUserId(Long userId) {

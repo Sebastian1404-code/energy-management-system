@@ -25,40 +25,31 @@ public class DeviceService {
         return deviceRepo.findAll().stream()
                 .map(d -> new DeviceResponse(
                         d.getId(), d.getName(), d.getMaximConsumptionValue(),
-                        d.getUserRef().getUser_id()))
+                        d.getUserRef() != null ? d.getUserRef().getUser_id() : null))
                 .toList();
     }
 
     public DeviceResponse getById(Long id) {
         Device d = deviceRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Device not found: " + id));
-        return new DeviceResponse(d.getId(), d.getName(), d.getMaximConsumptionValue(), d.getUserRef().getUser_id());
+        return new DeviceResponse(d.getId(), d.getName(), d.getMaximConsumptionValue(), d.getUserRef() != null ? d.getUserRef().getUser_id() : null);
     }
 
     public DeviceResponse create(DeviceRequest req) {
-        DeviceUserRef ref = userRefRepo.findById(req.getUserId())
-                .orElseThrow(() -> new IllegalArgumentException("Unknown userId: " + req.getUserId())); // prevents FK error
+        DeviceUserRef ref = null;
+        if (req.getUserId() != null) {
+            ref = userRefRepo.findById(req.getUserId())
+                    .orElseThrow(() -> new IllegalArgumentException("Unknown userId: " + req.getUserId()));
+        }
         Device saved = deviceRepo.save(Device.builder()
                 .name(req.getName())
                 .maximConsumptionValue(req.getMaximConsumptionValue())
                 .userRef(ref)
                 .build());
-        return new DeviceResponse(saved.getId(), saved.getName(), saved.getMaximConsumptionValue(), ref.getUser_id());
+        return new DeviceResponse(saved.getId(), saved.getName(), saved.getMaximConsumptionValue(), ref != null ? ref.getUser_id() : null);
     }
 
-//    public DeviceResponse update(Long id, DeviceRequest req) {
-//        Device d = deviceRepo.findById(id)
-//                .orElseThrow(() -> new RuntimeException("Device not found: " + id));
-//        d.setName(req.getName());
-//        d.setMaximConsumptionValue(req.getMaximConsumptionValue());
-//        if (req.getUserId() != null && !req.getUserId().equals(d.getUserRef().getUserId())) {
-//            DeviceUserRef ref = userRefRepo.findById(req.getUserId())
-//                    .orElseThrow(() -> new IllegalArgumentException("Unknown userId: " + req.getUserId()));
-//            d.setUserRef(ref);
-//        }
-//        Device saved = deviceRepo.save(d);
-//        return new DeviceResponse(saved.getId(), saved.getName(), saved.getMaximConsumptionValue(), saved.getUserRef().getUserId());
-//    }
+
 
     public DeviceResponse update(Long deviceId, Long userId) {
         Device device = deviceRepo.findById(deviceId)
@@ -78,6 +69,11 @@ public class DeviceService {
                 saved.getMaximConsumptionValue(),
                 saved.getUserRef() != null ? saved.getUserRef().getUser_id() : null
         );
+    }
+
+    public List<DeviceUserRef> getAllUserIds()
+    {
+        return userRefRepo.findAll();
     }
 
 
