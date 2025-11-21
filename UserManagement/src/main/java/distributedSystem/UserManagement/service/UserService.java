@@ -101,6 +101,7 @@ public class UserService {
                 .map(existing -> {
                     existing.setUsername(updatedUser.getUsername());
                     existing.setRole(updatedUser.getRole());
+                    existing.setEmail(updatedUser.getEmail());
                     return userRepository.save(existing);
                 })
                 .orElseThrow(() -> new RuntimeException("User not found"));

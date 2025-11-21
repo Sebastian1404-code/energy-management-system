@@ -1,0 +1,11 @@
+192.168.143.2 - - [21/Nov/2025:11:40:19 +0000] "GET /admin/users HTTP/1.1" 200 468 "-" "-" 1 "frontend@file" "http://web:80" 2ms
+192.168.143.2 - - [21/Nov/2025:11:40:20 +0000] "GET /assets/index-DZFJbrke.js HTTP/1.1" 200 285412 "-" "-" 2 "frontend@file" "http://web:80" 1ms
+192.168.143.2 - - [21/Nov/2025:11:40:20 +0000] "GET /assets/index-CIKa6TRH.css HTTP/1.1" 200 877 "-" "-" 3 "frontend@file" "http://web:80" 1ms
+192.168.143.2 - - [21/Nov/2025:11:40:20 +0000] "GET /vite.svg HTTP/1.1" 200 1497 "-" "-" 4 "frontend@file" "http://web:80" 0ms
+192.168.143.2 - - [21/Nov/2025:11:40:20 +0000] "GET /api/users HTTP/1.1" 200 138 "-" "-" 5 "users-api@file" "http://user-service:8080" 420ms
+192.168.143.2 - - [21/Nov/2025:11:40:21 +0000] "GET /admin/users HTTP/1.1" 304 0 "-" "-" 6 "frontend@file" "http://web:80" 0ms
+192.168.143.2 - - [21/Nov/2025:11:40:21 +0000] "GET /api/users HTTP/1.1" 200 138 "-" "-" 7 "users-api@file" "http://user-service:8080" 21ms
+192.168.143.2 - - [21/Nov/2025:11:40:32 +0000] "PUT /api/users/5 HTTP/1.1" 200 69 "-" "-" 8 "users-api@file" "http://user-service:8080" 98ms
+192.168.143.2 - - [21/Nov/2025:11:40:32 +0000] "GET /api/users HTTP/1.1" 200 140 "-" "-" 9 "users-api@file" "http://user-service:8080" 16ms
+192.168.143.2 - - [21/Nov/2025:11:40:40 +0000] "PUT /api/users/5 HTTP/1.1" 200 68 "-" "-" 10 "users-api@file" "http://user-service:8080" 27ms
+192.168.143.2 - - [21/Nov/2025:11:40:40 +0000] "GET /api/users HTTP/1.1" 200 139 "-" "-" 11 "users-api@file" "http://user-service:8080" 17ms
