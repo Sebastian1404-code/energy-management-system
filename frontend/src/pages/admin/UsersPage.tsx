@@ -18,6 +18,10 @@ const navBtnStyle = {
 };
 
 export default function UsersPage(){
+    const [editId, setEditId] = useState<number | null>(null);
+    const [editName, setEditName] = useState<string>("");
+    const [editEmail, setEditEmail] = useState<string>("");
+    const [editRole, setEditRole] = useState<"ADMIN"|"CLIENT">("CLIENT");
   const [rows, setRows] = useState<User[]>([]);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -68,6 +72,7 @@ export default function UsersPage(){
             <tr style={{ background: "#f1f3f4" }}>
               <th style={{ padding: 8, borderBottom: "1px solid #eee" }}>ID</th>
               <th style={{ padding: 8, borderBottom: "1px solid #eee" }}>Username</th>
+              <th style={{ padding: 8, borderBottom: "1px solid #eee" }}>Email</th>
               <th style={{ padding: 8, borderBottom: "1px solid #eee" }}>Role</th>
               <th style={{ padding: 8, borderBottom: "1px solid #eee" }}>Actions</th>
             </tr>
@@ -77,14 +82,37 @@ export default function UsersPage(){
               <tr key={u.id} style={{ borderBottom: "1px solid #eee" }}>
                 <td style={{ padding: 8 }}>{u.id}</td>
                 <td style={{ padding: 8 }}>{u.username}</td>
+                <td style={{ padding: 8 }}>{u.email ?? "-"}</td>
                 <td style={{ padding: 8 }}>{u.role}</td>
                 <td style={{ padding: 8 }}>
+                  <button onClick={() => {
+                    setEditId(u.id);
+                    setEditName(u.username);
+                    setEditEmail(u.email ?? "");
+                    setEditRole(u.role);
+                  }} style={{ marginRight: 8, padding: "4px 12px", borderRadius: 6, background: "#ffc107", color: "#333", border: "none", cursor: "pointer" }}>Edit</button>
                   <button onClick={async ()=>{ await UsersApi.remove(u.id); await load(); }} style={{ padding: "4px 12px", borderRadius: 6, background: "#dc3545", color: "#fff", border: "none", cursor: "pointer" }}>Delete</button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+        {editId !== null && (
+          <div style={{ marginTop: 24, background: "#f8f9fa", borderRadius: 12, boxShadow: "0 2px 8px #0001", padding: 24 }}>
+            <h3>Edit User</h3>
+            <input placeholder="Username" value={editName} onChange={e=>setEditName(e.target.value)} style={{ padding: 8, borderRadius: 6, border: "1px solid #ccc", marginRight: 8 }} />
+            <input placeholder="Email" value={editEmail} onChange={e=>setEditEmail(e.target.value)} style={{ padding: 8, borderRadius: 6, border: "1px solid #ccc", marginRight: 8 }} />
+            <select value={editRole} onChange={e=>setEditRole(e.target.value as any)} style={{ padding: 8, borderRadius: 6, border: "1px solid #ccc", marginRight: 8 }}>
+              <option value="CLIENT">CLIENT</option>
+              <option value="ADMIN">ADMIN</option>
+            </select>
+            <button onClick={async () => {
+              await UsersApi.update(editId!, { username: editName, email: editEmail, role: editRole });
+              setEditId(null); setEditName(""); setEditEmail(""); setEditRole("CLIENT"); await load();
+            }} style={{ padding: "8px 16px", borderRadius: 6, background: "#007bff", color: "#fff", border: "none", cursor: "pointer" }}>Save</button>
+            <button onClick={() => { setEditId(null); setEditName(""); setEditEmail(""); setEditRole("CLIENT"); }} style={{ padding: "8px 16px", borderRadius: 6, background: "#dc3545", color: "#fff", border: "none", cursor: "pointer", marginLeft: 8 }}>Cancel</button>
+          </div>
+        )}
       </div>
     </div>
   );

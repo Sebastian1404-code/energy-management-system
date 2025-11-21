@@ -2,7 +2,9 @@ package distributedSystem.DeviceManagement.controller;
 
 import distributedSystem.DeviceManagement.dto.DeviceRequest;
 import distributedSystem.DeviceManagement.dto.DeviceResponse;
+import distributedSystem.DeviceManagement.dto.UpdateDeviceMetaRequest;
 import distributedSystem.DeviceManagement.service.DeviceService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -41,6 +43,15 @@ public class DeviceController {
             @RequestBody Long userId) {
         return ResponseEntity.ok(service.update(deviceId, userId));
     }
+
+
+    @PatchMapping("/{id}/meta")
+    public ResponseEntity<DeviceResponse> updateMeta(
+            @PathVariable Long id,
+            @RequestBody @Valid UpdateDeviceMetaRequest req) {
+        return ResponseEntity.ok(service.updateNameAndConsumption(id, req));
+    }
+
 
 
     @DeleteMapping("/{id}")
