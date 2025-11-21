@@ -19,6 +19,9 @@ const navBtnStyle = {
 };
 
 export default function DevicesPage() {
+    const [editId, setEditId] = useState<number | null>(null);
+    const [editName, setEditName] = useState<string>("");
+    const [editMax, setEditMax] = useState<number>(0);
   const [rows, setRows] = useState<Device[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [name, setName] = useState<string>("");
@@ -84,12 +87,29 @@ export default function DevicesPage() {
                 <td style={{ padding: 8 }}>{d.maximConsumptionValue}W</td>
                 <td style={{ padding: 8 }}>{d.userId ?? "-"}</td>
                 <td style={{ padding: 8 }}>
+                  <button onClick={() => {
+                    setEditId(d.id);
+                    setEditName(d.name);
+                    setEditMax(d.maximConsumptionValue);
+                  }} style={{ marginRight: 8, padding: "4px 12px", borderRadius: 6, background: "#ffc107", color: "#333", border: "none", cursor: "pointer" }}>Edit</button>
                   <button onClick={async ()=>{ await DevicesApi.remove(d.id!); await load(); }} style={{ padding: "4px 12px", borderRadius: 6, background: "#dc3545", color: "#fff", border: "none", cursor: "pointer" }}>Delete</button>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
+        {editId !== null && (
+          <div style={{ marginTop: 24, background: "#f8f9fa", borderRadius: 12, boxShadow: "0 2px 8px #0001", padding: 24 }}>
+            <h3>Edit Device</h3>
+            <input placeholder="Device name" value={editName} onChange={e=>setEditName(e.target.value)} style={{ padding: 8, borderRadius: 6, border: "1px solid #ccc", marginRight: 8 }} />
+            <input placeholder="Max consumption (W)" type="number" value={editMax} onChange={e=>setEditMax(Number(e.target.value)||0)} style={{ padding: 8, borderRadius: 6, border: "1px solid #ccc", marginRight: 8 }} />
+            <button onClick={async () => {
+              await DevicesApi.updateMeta(editId, { name: editName, maximConsumptionValue: editMax });
+              setEditId(null); setEditName(""); setEditMax(0); await load();
+            }} style={{ padding: "8px 16px", borderRadius: 6, background: "#007bff", color: "#fff", border: "none", cursor: "pointer" }}>Save</button>
+            <button onClick={() => { setEditId(null); setEditName(""); setEditMax(0); }} style={{ padding: "8px 16px", borderRadius: 6, background: "#dc3545", color: "#fff", border: "none", cursor: "pointer", marginLeft: 8 }}>Cancel</button>
+          </div>
+        )}
       </div>
     </div>
   );
