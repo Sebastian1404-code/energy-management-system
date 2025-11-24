@@ -1,17 +1,18 @@
+// src/main/java/distributedSystem/Monitoring/service/WindowAggregator.java
 package distributedSystem.Monitoring.service;
 
-import distributedSystem.Monitoring.repository.HourlyConsumptionRepository;
+import distributedSystem.Monitoring.repository.WindowConsumptionRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 
-import java.time.*;
+import java.time.Instant;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-// HourlyAggregator.java (rename class if you like to WindowAggregator)
 @Service
-public class HourlyAggregator {
+public class WindowAggregator {
 
     public record Key(String deviceId, Instant windowStartUtc) {}
     public static final class Bucket {
@@ -21,48 +22,54 @@ public class HourlyAggregator {
         void add(double v) { this.kwh += v; this.samples += 1; }
     }
 
-    private final HourlyConsumptionRepository repo;
+    private final WindowConsumptionRepository repo;
     private final Map<Key, Bucket> buf = new ConcurrentHashMap<>();
     private final long flushSeconds;
-    private final int windowMinutes;   // <<< configurable
+    private final int windowMinutes;
+    private final boolean useProcessingTime;
 
-    public HourlyAggregator(
-            HourlyConsumptionRepository repo,
+    public WindowAggregator(
+            WindowConsumptionRepository repo,
             @Value("${app.flush-seconds:5}") long flushSeconds,
-            @Value("${app.aggregate-minutes:60}") int windowMinutes   // <<< add this property
+            @Value("${app.aggregate-minutes:60}") int windowMinutes,
+            @Value("${app.window.use-processing-time:false}") boolean useProcessingTime
     ) {
         this.repo = repo;
         this.flushSeconds = flushSeconds;
         this.windowMinutes = Math.max(1, windowMinutes);
+        this.useProcessingTime = useProcessingTime;
     }
 
-    private Instant windowStart(Instant ts) {
-        long epochSec = ts.getEpochSecond();
+    private Instant windowStart(Instant basis) {
+        long epochSec = basis.getEpochSecond();
         long sizeSec = windowMinutes * 60L;
         long start = (epochSec / sizeSec) * sizeSec;
         return Instant.ofEpochSecond(start);
     }
 
-    public void add(String deviceId, Instant timestampUtc, double valueKwh) {
-        Instant win = windowStart(timestampUtc);
+    public void add(String deviceId, Instant eventTimestampUtc, double valueKwh) {
+        Instant basis = useProcessingTime ? Instant.now() : eventTimestampUtc;
+        Instant win = windowStart(basis);
         Key key = new Key(deviceId, win);
         buf.compute(key, (k, b) -> {
-            if (b == null) return new Bucket(valueKwh, 1);
+            if (b == null) {
+                return new Bucket(valueKwh, 1);
+            }
             b.add(valueKwh);
             return b;
         });
+
     }
 
     @Scheduled(fixedDelayString = "#{${app.flush-seconds:5} * 1000}")
+    @Transactional               // ← add this (or on the repo method, but I like both)
     public void flush() {
         if (buf.isEmpty()) return;
         Map<Key, Bucket> snapshot = new ConcurrentHashMap<>(buf);
         buf.clear();
-
         Instant now = Instant.now();
         snapshot.forEach((k, b) ->
-                // Reuse the same UPSERT method; the table/column names can stay "hourly"
-                repo.upsertAdd(k.deviceId(), k.windowStartUtc(), b.kwh, b.samples, now)
+                repo.upsertAdd(k.deviceId(), k.windowStartUtc(), windowMinutes, b.kwh, b.samples, now)
         );
     }
 }

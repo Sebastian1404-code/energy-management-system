@@ -2,7 +2,7 @@
 package distributedSystem.Monitoring.kafka;
 
 import distributedSystem.Monitoring.model.DeviceReading;
-import distributedSystem.Monitoring.service.HourlyAggregator;
+import distributedSystem.Monitoring.service.WindowAggregator;
 import distributedSystem.Monitoring.service.RecentStore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -21,9 +21,9 @@ public class DeviceReadingListener {
     private static final Logger log = LoggerFactory.getLogger(DeviceReadingListener.class);
     private final ObjectMapper mapper;         // << inject
     private final RecentStore store;
-    private final HourlyAggregator aggregator;
+    private final WindowAggregator aggregator;
 
-    public DeviceReadingListener(ObjectMapper mapper, RecentStore store, HourlyAggregator aggregator) {
+    public DeviceReadingListener(ObjectMapper mapper, RecentStore store, WindowAggregator aggregator) {
         this.mapper = mapper;
         this.store = store;
         this.aggregator = aggregator;

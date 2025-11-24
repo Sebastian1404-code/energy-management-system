@@ -156,13 +156,12 @@ services:
     environment:
       KAFKA_BOOTSTRAP: ${KAFKA_BOOTSTRAP:-kafka:9092}
       KAFKA_TOPIC: ${DEVICE_READINGS_TOPIC:-device-readings}
-      DEVICES: ${SIM_DEVICES:-100}
-      SPEEDUP: ${SIM_SPEEDUP:-600}
+      DEVICES: ${SIM_DEVICES:-10}
+      SPEEDUP: ${SIM_SPEEDUP:-60}
       DEVICE_PREFIX: ${SIM_PREFIX:-device-}
       SEED: ${SIM_SEED:-42}
       SIM_HOURS: ${SIM_HOURS:-}
       ACKS: "1"
-      PRODUCER_MINIMAL: "1"
     networks:
       - proxy-network
     restart: unless-stopped
@@ -180,6 +179,9 @@ services:
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
       SPRING_KAFKA_CONSUMER_GROUP_ID: monitoring-consumer
       APP_DEVICE_TOPIC: device-readings
+      APP_FLUSH_SECONDS: "5"
+      APP_AGGREGATE_MINUTES: "1"
+      APP_WINDOW_USE_PROCESSING_TIME: "true"
       SERVER_PORT: 8085
       SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-monitoring:5432/monitoring
