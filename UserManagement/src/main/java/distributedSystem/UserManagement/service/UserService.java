@@ -4,8 +4,11 @@ import distributedSystem.UserManagement.dto.CreateUserRequest;
 import distributedSystem.UserManagement.dto.CreateUserRequestAdmin;
 import distributedSystem.UserManagement.dto.CredentialRequest;
 import distributedSystem.UserManagement.events.UserEventsProducer;
+import distributedSystem.UserManagement.model.Role;
 import distributedSystem.UserManagement.model.UserEntity;
 import distributedSystem.UserManagement.repository.UserRepository;
+import jakarta.transaction.Transactional;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -132,5 +135,31 @@ public class UserService {
                 .map(UserEntity::getId);
     }
 
+    @Transactional
+    public Long createIfAbsentAndReturnId(String username, String email, Role role) {
+        // Fast path: already exists
+        return userRepository.findByUsername(username)
+                .map(UserEntity::getId)
+                .orElseGet(() -> {
+                    // Create new user
+                    UserEntity u = new UserEntity();
+                    u.setUsername(username);
+                    u.setEmail(email);
+                    u.setRole(role);
+
+                    try {
+                        UserEntity saved = userRepository.save(u);  // persist first
+                        // publish AFTER successful save
+                        producer.publishUserCreatedEvent(saved.getId());
+                        return saved.getId();
+
+                    } catch (DataIntegrityViolationException e) {
+                        // Race condition fallback: someone inserted the same username in parallel
+                        return userRepository.findByUsername(username)
+                                .map(UserEntity::getId)
+                                .orElseThrow(() -> e); // if still not found, bubble up original error
+                    }
+                });
+    }
 
 }

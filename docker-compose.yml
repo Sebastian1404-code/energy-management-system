@@ -249,6 +249,8 @@ services:
     depends_on:
       postgres-credential:
         condition: service_healthy
+      kafka:
+        condition: service_healthy
     networks:
       - proxy-network
 

@@ -1,6 +1,7 @@
 package distributedSystem.Authorization.service;
 
 import distributedSystem.Authorization.dto.*;
+import distributedSystem.Authorization.events.UserKafkaGateway;
 import distributedSystem.Authorization.model.Credential;
 import distributedSystem.Authorization.repository.CredentialRepository;
 import io.jsonwebtoken.Claims;
@@ -24,6 +25,8 @@ public class CredentialService {
     private final WebClient userServiceClient;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final UserKafkaGateway userKafkaGateway; // <-- inject gateway
+
 
 
 
@@ -35,7 +38,13 @@ public class CredentialService {
         }
 
 
-        Long userId = createOrGetUserId(req.username(), req.email(), Role.ADMIN);
+        //Long userId = createOrGetUserId(req.username(), req.email(), Role.ADMIN);
+
+        Long userId = userKafkaGateway.createOrGetUserId(
+                req.username(),
+                req.email(),
+                Role.ADMIN
+        );
         if (userId == null) {
             throw new IllegalStateException("User Service did not return a userId");
         }
