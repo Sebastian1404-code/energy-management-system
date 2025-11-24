@@ -2,8 +2,8 @@
 package distributedSystem.Monitoring.kafka;
 
 import distributedSystem.Monitoring.model.DeviceReading;
+import distributedSystem.Monitoring.service.LastSeenService;
 import distributedSystem.Monitoring.service.WindowAggregator;
-import distributedSystem.Monitoring.service.RecentStore;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
@@ -20,13 +20,14 @@ public class DeviceReadingListener {
 
     private static final Logger log = LoggerFactory.getLogger(DeviceReadingListener.class);
     private final ObjectMapper mapper;         // << inject
-    private final RecentStore store;
     private final WindowAggregator aggregator;
+    private final LastSeenService lastSeen;
 
-    public DeviceReadingListener(ObjectMapper mapper, RecentStore store, WindowAggregator aggregator) {
+
+    public DeviceReadingListener(ObjectMapper mapper, WindowAggregator aggregator, LastSeenService lastSeen) {
         this.mapper = mapper;
-        this.store = store;
         this.aggregator = aggregator;
+        this.lastSeen = lastSeen;
     }
 
     @KafkaListener(
@@ -51,9 +52,9 @@ public class DeviceReadingListener {
 
             DeviceReading dr = mapper.readValue(p, DeviceReading.class);
 
-            store.add(dr);
 
             Instant ts = Instant.parse(dr.timestamp());
+            lastSeen.mark(dr.device_id(), ts);
             aggregator.add(dr.device_id(), ts, dr.value_kwh());
 
             if ((offset % 10) == 0) {

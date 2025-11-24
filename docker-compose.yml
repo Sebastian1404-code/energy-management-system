@@ -182,14 +182,13 @@ services:
       APP_FLUSH_SECONDS: "5"
       APP_AGGREGATE_MINUTES: "1"
       APP_WINDOW_USE_PROCESSING_TIME: "true"
-      SERVER_PORT: 8085
       SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-monitoring:5432/monitoring
       SPRING_DATASOURCE_USERNAME: monitoring
       SPRING_DATASOURCE_PASSWORD: Sebi1404
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
-    ports:
-      - "8085:8085"
+#    ports:
+#      - "8085:8085"
     networks:
       - proxy-network
 

@@ -1,6 +1,7 @@
 // src/main/java/distributedSystem/Monitoring/repository/WindowConsumptionRepository.java
 package distributedSystem.Monitoring.repository;
 
+import distributedSystem.Monitoring.model.WindowConsumption;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -8,6 +9,8 @@ import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface WindowConsumptionRepository extends CrudRepository<distributedSystem.Monitoring.model.WindowConsumption, Long> {
@@ -27,4 +30,26 @@ public interface WindowConsumptionRepository extends CrudRepository<distributedS
         """, nativeQuery = true)
     void upsertAdd(String deviceId, Instant windowStartUtc, int windowMinutes,
                    double deltaKwh, int deltaSamples, Instant nowUtc);
+
+    Optional<WindowConsumption> findTopByDeviceIdOrderByWindowStartUtcDesc(String deviceId);
+
+
+    @Query(value = """
+  SELECT DISTINCT ON (device_id) *
+    FROM window_consumption
+   ORDER BY device_id, window_start_utc DESC
+  """, nativeQuery = true)
+    List<WindowConsumption> findLatestWindowPerDeviceNative();
+
+    @Query(value = """
+    SELECT wc.window_start_utc, wc.kwh, wc.sample_count, wc.window_minutes
+      FROM window_consumption wc
+     WHERE wc.device_id = ?1
+       AND wc.window_start_utc >= ?2
+       AND wc.window_start_utc <  ?3
+     ORDER BY wc.window_start_utc
+    """, nativeQuery = true)
+    List<Object[]> findRawWindowsForDay(String deviceId, Instant startInclusiveUtc, Instant endExclusiveUtc);
+
+
 }
