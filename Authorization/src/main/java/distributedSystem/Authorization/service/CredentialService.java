@@ -74,7 +74,7 @@ public class CredentialService {
         }
     }
 
-    private Long createOrGetUserId(String username, String email, Role role) {
+    /*private Long createOrGetUserId(String username, String email, Role role) {
         // Try to create
         CreateUserResponse created = userServiceClient.post()
                 .uri("/users")
@@ -96,7 +96,7 @@ public class CredentialService {
                 .bodyToMono(Long.class)
                 .block();
 
-    }
+    }*/
 
 
 
