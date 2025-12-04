@@ -10,6 +10,7 @@ import DevicesPage from "./pages/admin/DevicesPage";
 import AssignmentsPage from "./pages/admin/AssignmentsPage";
 import MyDevicesPage from "./pages/client/MyDevicesPage";
 import Register from "./pages/Register";
+import DeviceDetailsPage from "./pages/client/DeviceDetailsPage";
 
 export default function App() {
   return (
@@ -28,6 +29,7 @@ export default function App() {
             </Route>
             <Route element={<RequireRole allowed={["CLIENT"]} />}>
               <Route path="/me/devices" element={<MyDevicesPage/>}/>
+              <Route path="/client/device/:deviceId" element={<DeviceDetailsPage/>}/>
             </Route>
           </Route>
           <Route path="*" element={<Navigate to="/" replace/>}/>

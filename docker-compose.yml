@@ -59,6 +59,26 @@ services:
       timeout: 5s
       retries: 5
 
+  monitoring-db:
+    image: postgres:latest
+    container_name: postgres-monitoring
+    environment:
+      POSTGRES_DB: monitoring
+      POSTGRES_USER: monitoring
+      POSTGRES_PASSWORD: Sebi1404
+    ports:
+      - "5435:5432"
+    volumes:
+      - pgdata-monitoring:/var/lib/postgresql/data
+    networks:
+      - proxy-network
+    healthcheck:
+      test: [ "CMD-SHELL","pg_isready -U monitoring -d monitoring" ]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+
 
 
   kafka:
@@ -90,6 +110,91 @@ services:
         fi
         exec /opt/kafka/bin/kafka-server-start.sh /opt/kafka/config/kraft/server.properties
       '
+  
+
+  # Assignment 2
+
+  kafka-init:
+    image: apache/kafka:3.7.0
+    depends_on:
+      kafka:
+        condition: service_healthy
+    environment:
+      DEVICE_READINGS_TOPIC: ${DEVICE_READINGS_TOPIC:-device-readings}
+      DEVICE_READINGS_PARTITIONS: ${DEVICE_READINGS_PARTITIONS:-3}
+    networks:
+      - proxy-network
+    command: >
+      bash -lc '
+        set -e
+        # Wait until broker responds
+        until /opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server kafka:9092 >/dev/null 2>&1; do
+          echo "Waiting for Kafka..."; sleep 2; 
+        done
+        # Create the telemetry topic (safe if already exists)
+        /opt/kafka/bin/kafka-topics.sh \
+          --bootstrap-server kafka:9092 \
+          --create --if-not-exists \
+          --topic "$${DEVICE_READINGS_TOPIC}" \
+          --partitions "$${DEVICE_READINGS_PARTITIONS}" \
+          --replication-factor 1
+        echo "Kafka topics ensured."
+      '
+    restart: "no"
+
+
+  device-simulator:
+    build:
+      context: ./DataSimulation
+      dockerfile: Dockerfile
+    container_name: device-simulator
+    depends_on:
+      kafka-init:
+        condition: service_completed_successfully
+      kafka:
+        condition: service_healthy
+    environment:
+      KAFKA_BOOTSTRAP: ${KAFKA_BOOTSTRAP:-kafka:9092}
+      KAFKA_TOPIC: ${DEVICE_READINGS_TOPIC:-device-readings}
+      DEVICES: ${SIM_DEVICES:-10}
+      SPEEDUP: ${SIM_SPEEDUP:-60}
+      DEVICE_PREFIX: ${SIM_PREFIX:-device-}
+      SEED: ${SIM_SEED:-42}
+      SIM_HOURS: ${SIM_HOURS:-}
+      ACKS: "1"
+    networks:
+      - proxy-network
+    restart: unless-stopped
+
+  monitoring-service:
+    build:
+      context: ./Monitoring
+    container_name: monitoring-service
+    depends_on:
+      kafka:
+        condition: service_healthy
+      monitoring-db:
+        condition: service_healthy
+    environment:
+      SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+      SPRING_KAFKA_CONSUMER_GROUP_ID: monitoring-consumer
+      APP_DEVICE_TOPIC: device-readings
+      APP_FLUSH_SECONDS: "5"
+      APP_AGGREGATE_MINUTES: "1"
+      APP_WINDOW_USE_PROCESSING_TIME: "true"
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-monitoring:5432/monitoring
+      SPRING_DATASOURCE_USERNAME: monitoring
+      SPRING_DATASOURCE_PASSWORD: Sebi1404
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+#    ports:
+#      - "8085:8085"
+    networks:
+      - proxy-network
+
+
+
+
 
   # ---------- USER SERVICE ----------
   user-service:
@@ -144,6 +249,8 @@ services:
     depends_on:
       postgres-credential:
         condition: service_healthy
+      kafka:
+        condition: service_healthy
     networks:
       - proxy-network
 
@@ -155,11 +262,14 @@ services:
       args:
         VITE_API_URL: /api/users
         VITE_DEVICE_API_URL: /api/devices
+        VITE_MONITORING_API_URL: /api/monitoring
     container_name: web
     depends_on:
       user-service:
         condition: service_started
       device-service:
+        condition: service_started
+      monitoring-service:
         condition: service_started
     networks:
       - proxy-network
@@ -189,6 +299,7 @@ volumes:
   pgdata-user:
   pgdata-device:
   pgdata-credential:
+  pgdata-monitoring:
   kafka-data:
 
 

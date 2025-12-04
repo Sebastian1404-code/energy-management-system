@@ -42,6 +42,13 @@ http:
       service: devices-svc
       priority: 100
 
+    monitoring-api:
+      rule: "Host(`localhost`) && PathPrefix(`/api/monitoring`)"
+      entryPoints: [ web ]
+      middlewares: [ strip-api-prefix, jwt-auth ]
+      service: monitoring-svc
+      priority: 100
+
     # --- Frontend SPA (catch-all) ---
     frontend:
       rule: "Host(`172.20.10.3`) || Host(`localhost`)"
@@ -76,10 +83,7 @@ http:
           - X-Role
 
 
-    auth-basic: # Middleware for basic authentication
-      basicAuth:
-        users:
-          - "test:$apr1$H6uskkkW$IgXLP6ewTrSuBkTrqE8wj/" # password = "test"
+
 
   services:
     web-svc:
@@ -101,4 +105,9 @@ http:
       loadBalancer:
         servers:
           - url: "http://authorization-service:8080"
+
+    monitoring-svc:
+      loadBalancer:
+        servers:
+          - url: "http://monitoring-service:8080"
 

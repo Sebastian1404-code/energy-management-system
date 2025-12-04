@@ -4,6 +4,7 @@ import axios from "axios";
 const userApi = axios.create({ baseURL: import.meta.env.VITE_API_URL });
 const deviceApi = axios.create({ baseURL: import.meta.env.VITE_DEVICE_API_URL });
 const authApi = axios.create({ baseURL: import.meta.env.VITE_AUTH_API_URL });
+const monitoringApi = axios.create({ baseURL: import.meta.env.VITE_MONITORING_API_URL });
 
 const attachAuth = (instance: typeof userApi) => {
   instance.interceptors.request.use(cfg => {
@@ -25,5 +26,6 @@ const attachAuth = (instance: typeof userApi) => {
 attachAuth(userApi);
 attachAuth(deviceApi);
 attachAuth(authApi);
+attachAuth(monitoringApi);
 
-export { userApi, deviceApi, authApi };
+export { userApi, deviceApi, authApi, monitoringApi };
