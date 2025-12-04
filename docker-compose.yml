@@ -153,6 +153,8 @@ services:
         condition: service_completed_successfully
       kafka:
         condition: service_healthy
+    volumes:
+      - ./DataSimulation/config.json:/app/config.json:ro
     environment:
       KAFKA_BOOTSTRAP: ${KAFKA_BOOTSTRAP:-kafka:9092}
       KAFKA_TOPIC: ${DEVICE_READINGS_TOPIC:-device-readings}
@@ -162,6 +164,7 @@ services:
       SEED: ${SIM_SEED:-42}
       SIM_HOURS: ${SIM_HOURS:-}
       ACKS: "1"
+      CONFIG_PATH: /app/config.json
     networks:
       - proxy-network
     restart: unless-stopped

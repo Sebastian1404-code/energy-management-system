@@ -38,11 +38,11 @@ do
   echo "Waiting for Kafka bootstrap ${KAFKA_BOOTSTRAP}..."
   sleep 2
 done
-
+CONFIG_PATH="${CONFIG_PATH:-/app/config.json}"
 # Build args array safely
 ARGS=( --bootstrap "${KAFKA_BOOTSTRAP}" --topic "${KAFKA_TOPIC}"
        --devices "${DEVICES}" --speedup "${SPEEDUP}" --prefix "${DEVICE_PREFIX}"
-       --acks "${ACKS:-0}" )
+       --acks "${ACKS:-0}" --config "${CONFIG_PATH}" )
 [[ -n "${SEED:-}" ]] && ARGS+=( --seed "${SEED}" )
 [[ -n "${SIM_HOURS:-}" ]] && ARGS+=( --hours "${SIM_HOURS}" )
 

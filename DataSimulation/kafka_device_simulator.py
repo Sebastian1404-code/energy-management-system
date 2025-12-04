@@ -46,13 +46,15 @@ def iter_time(start: datetime, step: timedelta) -> Iterator[datetime]:
         yield t
         t += step
 
-def build_devices(n: int, prefix: str) -> List[DeviceState]:
-    out: List[DeviceState] = []
-    for i in range(1, n + 1):
-        base = random.uniform(0.05, 0.25)   # 0.3..1.5 kWh/h
-        drift = random.uniform(-0.05, 0.05) # ±5% seasonal
-        out.append(DeviceState(f"{prefix}{i:03d}", base, drift))
+def build_devices(prefix: str, device_indices: List[int]) -> List[DeviceState]:
+    out = []
+    for idx in device_indices:
+        device_id = f"{prefix}{idx:03d}"   # ← formats 1 → device-001
+        base = random.uniform(0.05, 0.25)
+        drift = random.uniform(-0.05, 0.05)
+        out.append(DeviceState(device_id, base, drift))
     return out
+
 
 def make_producer(bootstrap: str, acks: str) -> Producer:
     """
@@ -75,13 +77,22 @@ def make_producer(bootstrap: str, acks: str) -> Producer:
     }
     return Producer(conf)
 
-def run(bootstrap: str, topic: str, num_devices: int, speedup: int,
-        hours: float | None, seed: int | None, prefix: str, acks: str):
+def run(bootstrap: str, topic: str, speedup: int,
+        hours: float | None, seed: int | None, prefix: str, acks: str,
+        config_path: str):
     if seed is not None:
         random.seed(seed)
 
+    with open(config_path, "r") as f:
+        cfg = json.load(f)
+
+    device_indices = cfg.get("device_ids", [])
+
+    if not device_indices:
+        raise ValueError("Config file must contain a non-empty 'device_ids' list")
+
     producer = make_producer(bootstrap, acks)
-    devices = build_devices(num_devices, prefix)
+    devices = build_devices(prefix, device_indices)
 
     # Flush policy: with acks!=0 we can optionally flush every N messages
     do_periodic_flush = (acks != "0")
@@ -160,6 +171,8 @@ def run(bootstrap: str, topic: str, num_devices: int, speedup: int,
 
 if __name__ == "__main__":
     p = argparse.ArgumentParser(description="Smart-meter simulator -> Kafka (confluent-kafka)")
+    p.add_argument("--config", default="config.json",
+                  help="Path to config file containing device index list")
     p.add_argument("--bootstrap", default=os.getenv("KAFKA_BOOTSTRAP", "kafka:9092"))
     p.add_argument("--topic", default=os.getenv("KAFKA_TOPIC", "device-readings"))
     p.add_argument("--devices", type=int, default=int(os.getenv("DEVICES", 100)))
@@ -170,8 +183,8 @@ if __name__ == "__main__":
     p.add_argument("--acks", default=os.getenv("ACKS", "1"), choices=["0", "1", "all"])
     args = p.parse_args()
     try:
-        run(args.bootstrap, args.topic, args.devices, args.speedup,
-            args.hours, args.seed, args.prefix, args.acks)
+        run(args.bootstrap, args.topic, args.speedup,
+            args.hours, args.seed, args.prefix, args.acks, args.config)
     except KafkaException as e:
         print(f"Kafka error: {e}", file=sys.stderr); sys.exit(1)
     except Exception as e:
