@@ -1,5 +1,5 @@
 // src/pages/client/DeviceDetailsPage.tsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { monitoringApi } from "../../api/http";
 import { useParams } from "react-router-dom";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
@@ -14,7 +14,18 @@ interface DeviceSeriesPoint {
 
 export default function DeviceDetailsPage() {
   const { deviceId } = useParams<{ deviceId: string }>();
+  // Set default date to today in yyyy-mm-dd format
   const [date, setDate] = useState<string>("");
+
+  useEffect(() => {
+    if (!date) {
+      const today = new Date();
+      const yyyy = today.getFullYear();
+      const mm = String(today.getMonth() + 1).padStart(2, "0");
+      const dd = String(today.getDate()).padStart(2, "0");
+      setDate(`${yyyy}-${mm}-${dd}`);
+    }
+  }, [date]);
   const [series, setSeries] = useState<DeviceSeriesPoint[]>([]);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState("");
