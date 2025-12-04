@@ -262,11 +262,14 @@ services:
       args:
         VITE_API_URL: /api/users
         VITE_DEVICE_API_URL: /api/devices
+        VITE_MONITORING_API_URL: /api/monitoring
     container_name: web
     depends_on:
       user-service:
         condition: service_started
       device-service:
+        condition: service_started
+      monitoring-service:
         condition: service_started
     networks:
       - proxy-network

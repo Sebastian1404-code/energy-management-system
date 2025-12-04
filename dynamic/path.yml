@@ -45,7 +45,7 @@ http:
     monitoring-api:
       rule: "Host(`localhost`) && PathPrefix(`/api/monitoring`)"
       entryPoints: [ web ]
-      middlewares: [ strip-api-prefix ]
+      middlewares: [ strip-api-prefix, jwt-auth ]
       service: monitoring-svc
       priority: 100
 
@@ -83,10 +83,7 @@ http:
           - X-Role
 
 
-    auth-basic: # Middleware for basic authentication
-      basicAuth:
-        users:
-          - "test:$apr1$H6uskkkW$IgXLP6ewTrSuBkTrqE8wj/" # password = "test"
+
 
   services:
     web-svc:

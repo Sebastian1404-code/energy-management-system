@@ -38,7 +38,6 @@ public class CredentialService {
         }
 
 
-        //Long userId = createOrGetUserId(req.username(), req.email(), Role.ADMIN);
 
         Long userId = userKafkaGateway.createOrGetUserId(
                 req.username(),
@@ -74,30 +73,6 @@ public class CredentialService {
         }
     }
 
-    /*private Long createOrGetUserId(String username, String email, Role role) {
-        // Try to create
-        CreateUserResponse created = userServiceClient.post()
-                .uri("/users")
-                .bodyValue(new CreateUserRequest(username, email, role))
-                .retrieve()
-                .onStatus(s -> s.value() == 409, resp -> Mono.empty()) // treat 409 as "already exists"
-                .bodyToMono(CreateUserResponse.class)
-                .block();
-
-        if (created != null && created.userId() != null) {
-            return created.userId();
-        }
-
-
-        return userServiceClient.post()
-                .uri("/users/id-by-username")
-                .bodyValue(Map.of("username", username))
-                .retrieve()
-                .bodyToMono(Long.class)
-                .block();
-
-    }*/
-
 
 
     // LOGIN
@@ -127,7 +102,7 @@ public class CredentialService {
             Claims claims = jwtService.verifyAndGetClaims(raw);
 
             HttpHeaders h = new HttpHeaders();
-            h.add("X-User-Id", claims.getSubject());                   // sub = userId
+            h.add("X-User-Id", claims.getSubject());
             h.add("X-Username", String.valueOf(claims.get("username")));
             h.add("X-Role", String.valueOf(claims.get("role")));
             return Optional.of(h);

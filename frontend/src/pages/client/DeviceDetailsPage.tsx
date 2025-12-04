@@ -1,5 +1,6 @@
 // src/pages/client/DeviceDetailsPage.tsx
 import { useState } from "react";
+import { monitoringApi } from "../../api/http";
 import { useParams } from "react-router-dom";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 
@@ -23,11 +24,11 @@ export default function DeviceDetailsPage() {
     setLoading(true);
     setErr("");
     try {
-      const url = `http://localhost/api/monitoring/devices/${deviceId}/series?date=${date}&tz=Europe/Bucharest&virtualHourMinutes=1`;
-      const resp = await fetch(url);
-      if (!resp.ok) throw new Error("Failed to fetch series");
-      const data: DeviceSeriesPoint[] = await resp.json();
-      setSeries(data);
+      const url = `/devices/${deviceId}/series?date=${date}&tz=Europe/Bucharest&virtualHourMinutes=1`;
+      const resp = await monitoringApi.get(url);
+      const data = resp.data;
+      console.log('Device series API response:', data);
+      setSeries(Array.isArray(data) ? data : []);
     } catch (e: any) {
       setErr(e.message || "Error fetching data");
     } finally {

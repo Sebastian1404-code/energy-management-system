@@ -19,7 +19,7 @@ import java.time.Instant;
 public class DeviceReadingListener {
 
     private static final Logger log = LoggerFactory.getLogger(DeviceReadingListener.class);
-    private final ObjectMapper mapper;         // << inject
+    private final ObjectMapper mapper;
     private final WindowAggregator aggregator;
     private final LastSeenService lastSeen;
 

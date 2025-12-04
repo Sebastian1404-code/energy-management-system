@@ -1,13 +1,14 @@
 // src/pages/client/MyDevicesPage.tsx
 import { useEffect, useState } from "react";
 import { DevicesApi } from "../../api/devices";
+import { getDeviceSummaries } from "../../api/monitoring";
 import type { Device } from "../../api/devices";
 import { useAuth } from "../../auth/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { UsersApi } from "../../api/users";
 
 // Type for device summary from monitoring endpoint
-interface DeviceSummary {
+export interface DeviceSummary {
   device_id: string;
   latest_window_start_utc: string;
   window_minutes: number;
@@ -67,22 +68,16 @@ export default function MyDevicesPage() {
       const allDevices = await DevicesApi.list();
       setRows(allDevices.filter(d => d.userId === userId));
       // Fetch device summaries from monitoring endpoint
-      const resp = await fetch("http://localhost/api/monitoring");
-      const data: DeviceSummary[] = await resp.json();
-      setSummaries(data);
+      const data = await getDeviceSummaries();
+      console.log('Device summaries API response:', data);
+      setSummaries(Array.isArray(data) ? data : []);
     })();
   }, [username]);
 
   // Helper to match summary by device id
   function getSummary(device: Device) {
-    // Find summary where device_id is device-XXX and XXX is padded to 3 digits
-    return summaries.find(s => {
-      // Extract numeric part from device_id (e.g., device-001 -> 1)
-      const match = s.device_id.match(/^device-(\d{3})$/);
-      if (!match) return false;
-      const summaryId = parseInt(match[1], 10);
-      return summaryId === device.id;
-    });
+    const paddedId = device.id.toString().padStart(3, "0");
+    return summaries.find(s => s.device_id === `device-${paddedId}`);
   }
 
   return (
