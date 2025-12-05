@@ -33,7 +33,7 @@ public class DeviceReadingListener {
     @KafkaListener(
             topics = "${app.device-topic}",
             groupId = "${spring.kafka.consumer.group-id}",
-            containerFactory = "filteredKafkaListenerContainerFactory"   // << use the filtered factory
+            containerFactory = "filteredKafkaListenerContainerFactory"
     )
     public void onMessage(
             String payload,

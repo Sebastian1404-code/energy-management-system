@@ -3,6 +3,7 @@ package distributedSystem.DeviceManagement.service;
 import distributedSystem.DeviceManagement.dto.DeviceRequest;
 import distributedSystem.DeviceManagement.dto.DeviceResponse;
 import distributedSystem.DeviceManagement.dto.UpdateDeviceMetaRequest;
+import distributedSystem.DeviceManagement.events.DeviceEventsProducer;
 import distributedSystem.DeviceManagement.model.Device;
 import distributedSystem.DeviceManagement.model.DeviceUserRef;
 import distributedSystem.DeviceManagement.repository.DeviceRepository;
@@ -19,10 +20,12 @@ public class DeviceService {
 
     private final DeviceRepository deviceRepo;
     private final DeviceUserRefRepository userRefRepo;
+    private final DeviceEventsProducer deviceEventsProducer;
 
-    public DeviceService(DeviceRepository deviceRepo, DeviceUserRefRepository userRefRepo) {
+    public DeviceService(DeviceRepository deviceRepo, DeviceUserRefRepository userRefRepo, DeviceEventsProducer deviceEventsProducer) {
         this.deviceRepo = deviceRepo;
         this.userRefRepo = userRefRepo;
+        this.deviceEventsProducer = deviceEventsProducer;
     }
 
     public List<DeviceResponse> getAll() {
@@ -50,6 +53,7 @@ public class DeviceService {
                 .maximConsumptionValue(req.getMaximConsumptionValue())
                 .userRef(ref)
                 .build());
+        deviceEventsProducer.publishDeviceCreatedEvent(saved.getId());
         return new DeviceResponse(saved.getId(), saved.getName(), saved.getMaximConsumptionValue(), ref != null ? ref.getUser_id() : null);
     }
 
@@ -94,6 +98,7 @@ public class DeviceService {
 
 
     public void delete(Long id) {
+        deviceEventsProducer.publishDeviceDeletedEvent(id);
         deviceRepo.deleteById(id);
     }
 
