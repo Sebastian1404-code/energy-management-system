@@ -1,7 +1,7 @@
 package distributedSystem.DeviceManagement.events;
 
 
-import distributedSystem.DeviceManagement.model.KafkaPayloadMonitoring;
+import distributedSystem.DeviceManagement.dto.KafkaPayloadMonitoring;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 

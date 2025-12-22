@@ -6,6 +6,7 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.apache.kafka.common.serialization.StringSerializer;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -37,7 +38,7 @@ public class KafkaReqRepConfig {
     @Bean("mapKafkaTemplate")
     public KafkaTemplate<String, Map<String,Object>> mapKafkaTemplate(
             @SuppressWarnings("SpringJavaInjectionPointsAutowiringInspection")
-            @org.springframework.beans.factory.annotation.Qualifier("mapProducerFactory")
+            @Qualifier("mapProducerFactory")
             ProducerFactory<String, Map<String,Object>> pf) {
         return new KafkaTemplate<>(pf);
     }
@@ -60,9 +61,9 @@ public class KafkaReqRepConfig {
     // ---- Listener factory wired to the Map reply template ----
     @Bean("mapListenerFactory")
     public ConcurrentKafkaListenerContainerFactory<String, Map<String,Object>> mapListenerFactory(
-            @org.springframework.beans.factory.annotation.Qualifier("mapConsumerFactory")
+            @Qualifier("mapConsumerFactory")
             ConsumerFactory<String, Map<String,Object>> cf,
-            @org.springframework.beans.factory.annotation.Qualifier("mapKafkaTemplate")
+            @Qualifier("mapKafkaTemplate")
             KafkaTemplate<String, Map<String,Object>> replyTemplate) {
 
         var f = new ConcurrentKafkaListenerContainerFactory<String, Map<String,Object>>();

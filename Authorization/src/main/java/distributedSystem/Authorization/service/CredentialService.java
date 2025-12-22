@@ -22,7 +22,6 @@ import java.util.Optional;
 public class CredentialService {
 
     private final CredentialRepository credentialRepository;
-    private final WebClient userServiceClient;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final UserKafkaGateway userKafkaGateway; // <-- inject gateway

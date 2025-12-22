@@ -1,4 +1,4 @@
-package distributedSystem.DeviceManagement.model;
+package distributedSystem.DeviceManagement.dto;
 
 
 import distributedSystem.DeviceManagement.events.DevMonType;

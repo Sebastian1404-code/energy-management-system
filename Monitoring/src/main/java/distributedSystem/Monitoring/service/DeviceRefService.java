@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class DeviceRefService {
-    private DeviceMonitoringRefRepository deviceMonitoringRefRepository;
+    private final DeviceMonitoringRefRepository deviceMonitoringRefRepository;
 
 
 

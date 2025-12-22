@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
-public class KafkaPayload {
+public class KafkaPayloadUser {
 
     private Long userId;
     private EventType eventType;
