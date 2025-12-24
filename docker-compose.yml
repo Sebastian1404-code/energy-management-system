@@ -298,6 +298,16 @@ services:
       - proxy-network
 
 
+  customer-support-service:
+    build:
+      context: ./CustomerSupport
+    container_name: customer-support-service
+    networks:
+      - proxy-network
+    environment:
+      SERVER_PORT: 8086
+
+
 volumes:
   pgdata-user:
   pgdata-device:
