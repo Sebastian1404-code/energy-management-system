@@ -49,6 +49,21 @@ http:
       service: monitoring-svc
       priority: 100
 
+    support-api:
+      rule: "Host(`localhost`) && PathPrefix(`/api/support`)"
+      entryPoints: [ web ]
+      middlewares: [ ]
+      service: support-svc
+      priority: 100
+
+    support-ws:
+      rule: "Host(`localhost`) && PathPrefix(`/ws`)"
+      entryPoints: [ web ]
+      middlewares: [ ]
+      service: support-svc
+      priority: 120
+
+
     # --- Frontend SPA (catch-all) ---
     frontend:
       rule: "Host(`172.20.10.3`) || Host(`localhost`)"
@@ -110,4 +125,9 @@ http:
       loadBalancer:
         servers:
           - url: "http://monitoring-service:8080"
+
+    support-svc:
+      loadBalancer:
+        servers:
+          - url: "http://customer-support-service:8086"
 

@@ -3,8 +3,9 @@ import { useAuth } from "../auth/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 export default function Dashboard() {
-  const { username, userId, role, logout } = useAuth();
+  const { username, userId, role, token, logout } = useAuth();
   const nav = useNavigate();
+  console.log("Logged in?", !!token, "userId:", userId, "role:", role);
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "linear-gradient(120deg, #6c63ff 0%, #007bff 100%)" }}>
@@ -24,6 +25,23 @@ export default function Dashboard() {
         <div style={{ fontSize: 18, color: "#444", marginBottom: 8 }}>Your role:</div>
         <div style={{ fontWeight: 600, fontSize: 20, color: "#6c63ff", marginBottom: 24 }}>{role ?? "none"}</div>
         <div style={{ color: "#888", fontSize: 15 }}>Use the navigation bar above to access your pages.</div>
+        <button
+          style={{
+            marginTop: 24,
+            padding: "10px 24px",
+            borderRadius: 8,
+            background: "#6c63ff",
+            color: "#fff",
+            border: "none",
+            fontWeight: 500,
+            fontSize: 16,
+            cursor: "pointer",
+            boxShadow: "0 2px 8px #6c63ff22"
+          }}
+          onClick={() => nav("/chat")}
+        >
+          Chat
+        </button>
       </div>
     </div>
   );

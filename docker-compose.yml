@@ -1,7 +1,7 @@
 services:
   # ---------- DATABASES ----------
   postgres-user:
-    image: postgres:latest
+    image: postgres:17
     container_name: postgres-user
     environment:
       POSTGRES_DB: UserDb
@@ -21,7 +21,7 @@ services:
 
 
   postgres-device:
-    image: postgres:latest
+    image: postgres:17
     container_name: postgres-device
     environment:
       POSTGRES_DB: DeviceDb
@@ -41,7 +41,7 @@ services:
 
 
   postgres-credential:
-    image: postgres:latest
+    image: postgres:17
     container_name: postgres-credential
     environment:
       POSTGRES_DB: CredentialDb
@@ -60,7 +60,7 @@ services:
       retries: 5
 
   monitoring-db:
-    image: postgres:latest
+    image: postgres:17
     container_name: postgres-monitoring
     environment:
       POSTGRES_DB: monitoring
@@ -296,6 +296,16 @@ services:
 #          action: restart
     networks:
       - proxy-network
+
+
+  customer-support-service:
+    build:
+      context: ./CustomerSupport
+    container_name: customer-support-service
+    networks:
+      - proxy-network
+    environment:
+      SERVER_PORT: 8086
 
 
 volumes:

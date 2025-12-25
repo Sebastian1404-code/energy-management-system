@@ -11,6 +11,7 @@ import AssignmentsPage from "./pages/admin/AssignmentsPage";
 import MyDevicesPage from "./pages/client/MyDevicesPage";
 import Register from "./pages/Register";
 import DeviceDetailsPage from "./pages/client/DeviceDetailsPage";
+import ChatPage from "./pages/ChatPage";
 
 export default function App() {
   return (
@@ -22,6 +23,7 @@ export default function App() {
           <Route path="/register" element={<Register/>}/>
           <Route element={<RequireAuth/>}>
             <Route index element={<Dashboard/>} />
+            <Route path="/chat" element={<ChatPage/>} />
             <Route element={<RequireRole allowed={["ADMIN"]} />}>
               <Route path="/admin/users" element={<UsersPage/>}/>
               <Route path="/admin/devices" element={<DevicesPage/>}/>

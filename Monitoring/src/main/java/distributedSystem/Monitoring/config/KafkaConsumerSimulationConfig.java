@@ -12,9 +12,9 @@ import org.springframework.kafka.listener.DefaultErrorHandler;
 import org.springframework.util.backoff.FixedBackOff;
 
 @Configuration
-public class KafkaListenerConfig {
+public class KafkaConsumerSimulationConfig {
 
-    private static final Logger log = LoggerFactory.getLogger(KafkaListenerConfig.class);
+    private static final Logger log = LoggerFactory.getLogger(KafkaConsumerSimulationConfig.class);
 
     @Bean(name = "filteredKafkaListenerContainerFactory")
     public ConcurrentKafkaListenerContainerFactory<String, String> filteredKafkaListenerContainerFactory(

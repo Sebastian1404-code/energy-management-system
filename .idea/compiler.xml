@@ -3,6 +3,15 @@
   <component name="CompilerConfiguration">
     <annotationProcessing>
       <profile default="true" name="Default" enabled="true" />
+      <profile name="Annotation profile for CustomerSupport" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <processorPath useClasspath="false">
+          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.42/lombok-1.18.42.jar" />
+        </processorPath>
+        <module name="CustomerSupport" />
+      </profile>
       <profile name="Annotation profile for UserManagement" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
@@ -13,22 +22,15 @@
         </processorPath>
         <module name="UserManagement" />
         <module name="Authorization" />
-        <module name="DeviceManagement" />
-      </profile>
-      <profile name="Annotation profile for Monitoring" enabled="true">
-        <sourceOutputDir name="target/generated-sources/annotations" />
-        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
-        <outputRelativeToContentRoot value="true" />
-        <processorPath useClasspath="false">
-          <entry name="$MAVEN_REPOSITORY$/org/projectlombok/lombok/1.18.40/lombok-1.18.40.jar" />
-        </processorPath>
         <module name="Monitoring" />
+        <module name="DeviceManagement" />
       </profile>
     </annotationProcessing>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_OVERRIDE">
       <module name="Authorization" options="-parameters" />
+      <module name="CustomerSupport" options="-parameters" />
       <module name="DeviceManagement" options="-parameters" />
       <module name="Monitoring" options="-parameters" />
       <module name="UserManagement" options="-parameters" />

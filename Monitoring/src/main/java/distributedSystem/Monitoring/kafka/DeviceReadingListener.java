@@ -33,7 +33,7 @@ public class DeviceReadingListener {
     @KafkaListener(
             topics = "${app.device-topic}",
             groupId = "${spring.kafka.consumer.group-id}",
-            containerFactory = "filteredKafkaListenerContainerFactory"   // << use the filtered factory
+            containerFactory = "filteredKafkaListenerContainerFactory"
     )
     public void onMessage(
             String payload,
@@ -43,7 +43,7 @@ public class DeviceReadingListener {
             ConsumerRecord<String, String> record
     ) {
         try {
-            if (payload == null) return;                 // extra safety
+            if (payload == null) return;
             String p = payload.trim();
             if (p.isEmpty() || p.charAt(0) != '{') {     // should be filtered already, but belt & suspenders
                 log.warn("Skipping non-JSON payload @{} p{} off {}", topic, partition, offset);
