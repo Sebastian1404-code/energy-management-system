@@ -31,17 +31,30 @@ export default function ChatPage() {
 
   // USER: get/create conversation and load history
   useEffect(() => {
-    if (!userId || !role || role.toUpperCase() !== "USER") return;
+    if (!userId || !role || role.toUpperCase() !== "CLIENT") return;
+    // Try to restore conversationId from localStorage
+    const storageKey = `chat_conversationId_${userId}`;
+    const storedConvId = localStorage.getItem(storageKey);
+    if (storedConvId) {
+      setConversationId(storedConvId);
+    }
     (async () => {
       try {
-        const convResp = await axios.get("/api/support/chat/conversation");
+        const convResp = await axios.get(`/api/support/chat/conversation?userId=${encodeURIComponent(userId)}`);
         setConversationId(convResp.data.id);
-        const msgResp = await axios.get("/api/support/chat/conversation/messages");
+        localStorage.setItem(storageKey, convResp.data.id);
+        const msgResp = await axios.get(`/api/support/chat/conversation/messages?userId=${encodeURIComponent(userId)}`);
         setMessages(Array.isArray(msgResp.data) ? msgResp.data : []);
       } catch (err) {
-        console.error("[ChatPage] USER REST error:", err);
+        console.error("Error fetching conversation or messages:", err);
       }
     })();
+    // Clean up on logout or user change
+    return () => {
+      if (!userId) {
+        localStorage.removeItem(storageKey);
+      }
+    };
   }, [userId, role]);
 
   // ADMIN: fetch conversations
@@ -50,10 +63,8 @@ export default function ChatPage() {
     (async () => {
       try {
         const resp = await axios.get("/api/support/admin/chat/conversations", { headers: { 'Cache-Control': 'no-cache' } });
-        console.log("[ChatPage] ADMIN conversations raw response:", resp.data);
         setConversations(Array.isArray(resp.data) ? resp.data : []);
       } catch (err) {
-        console.error("[ChatPage] ADMIN REST error (conversations):", err);
         setConversations([]);
       }
     })();
@@ -68,7 +79,6 @@ export default function ChatPage() {
         setMessages(Array.isArray(resp.data) ? resp.data : []);
         setConversationId(selectedConversation.id);
       } catch (err) {
-        console.error("[ChatPage] ADMIN REST error (messages):", err);
         setMessages([]);
       }
     })();

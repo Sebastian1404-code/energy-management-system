@@ -21,32 +21,33 @@ public class ChatRestController {
 
     // USER: get or create conversation
     @GetMapping("/chat/conversation")
-    public ConversationDto getMyConversation(@RequestHeader("X-User-Id") String userId) {
+    public ConversationDto getMyConversation(@RequestParam String userId) {
         return chatService.getOrCreateConversationForUser(userId);
     }
 
+
     // USER: send message
     @PostMapping("/chat/messages")
-    public MessageDto userSend(@RequestHeader("X-User-Id") String userId,
+    public MessageDto userSend(@RequestParam String userId,
                                @Valid @RequestBody SendMessageRequest req) {
         return chatService.sendUserMessage(userId, req.content());
     }
 
+
     // USER: message history
     @GetMapping("/chat/conversation/messages")
-    public List<MessageDto> myMessages(@RequestHeader("X-User-Id") String userId) {
+    public List<MessageDto> myMessages(@RequestParam String userId) {
         ConversationDto conv = chatService.getOrCreateConversationForUser(userId);
         return chatService.getMessages(conv.id(), userId, Role.USER);
     }
 
+
     // ADMIN: list conversations (no auth here)
     @GetMapping("/admin/chat/conversations")
-    @ResponseBody
-    @CrossOrigin
-    public List<ConversationDto> adminListConversations(HttpServletResponse response) {
-        response.setHeader("Cache-Control", "no-store");
+    public List<ConversationDto> adminListConversations() {
         return chatService.listConversationsForAdmin();
     }
+
     // ADMIN: get messages
     @GetMapping("/admin/chat/conversations/{conversationId}/messages")
     public List<MessageDto> adminGetMessages(@RequestHeader(value = "X-Admin-Id", required = false) String adminId,

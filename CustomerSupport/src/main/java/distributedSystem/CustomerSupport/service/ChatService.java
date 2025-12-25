@@ -21,7 +21,6 @@ public class ChatService {
     public ConversationDto getOrCreateConversationForUser(String userId) {
         Optional<Conversation> existing = conversationRepo.findByUserId(userId);
         if (existing.isPresent()) {
-            System.out.println("[ChatService] Found existing conversation for userId: " + userId);
             return toDto(existing.get());
         } else {
             Instant now = Instant.now();
@@ -59,7 +58,12 @@ public class ChatService {
             throw new SecurityException("Forbidden");
         }
 
-        return messageRepo.findByConversationId(conversationId).stream().map(this::toDto).toList();
+        List<Message> messages = messageRepo.findByConversationId(conversationId);
+        for (Message m : messages) {
+            System.out.println("  - " + m.getSenderRole() + " " + m.getSenderId() + ": " + m.getContent());
+        }
+
+        return messages.stream().map(this::toDto).toList();
     }
 
     public MessageDto sendUserMessage(String userId, String content) {
