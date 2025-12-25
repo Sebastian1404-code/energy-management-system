@@ -1,0 +1,10 @@
+192.168.143.2 - - [25/Dec/2025:16:27:54 +0000] "GET /assets/index-CIKa6TRH.css HTTP/1.1" 200 877 "-" "-" 1 "frontend@file" "http://web:80" 3ms
+192.168.143.2 - - [25/Dec/2025:16:27:54 +0000] "GET /.well-known/appspecific/com.chrome.devtools.json HTTP/1.1" 200 468 "-" "-" 2 "frontend@file" "http://web:80" 0ms
+192.168.143.2 - - [25/Dec/2025:16:27:57 +0000] "GET /api/support/chat/conversation?userId=2 HTTP/1.1" 200 148 "-" "-" 3 "support-api@file" "http://customer-support-service:8086" 203ms
+192.168.143.2 - - [25/Dec/2025:16:27:57 +0000] "GET /api/support/chat/conversation/messages?userId=2 HTTP/1.1" 200 2 "-" "-" 5 "support-api@file" "http://customer-support-service:8086" 11ms
+192.168.143.2 - - [25/Dec/2025:16:27:57 +0000] "GET /ws?userId=2&role=CLIENT HTTP/1.1" 0 0 "-" "-" 4 "support-ws@file" "http://customer-support-service:8086" 56085ms
+192.168.143.2 - - [25/Dec/2025:16:28:57 +0000] "POST /api/auth/login HTTP/1.1" 200 261 "-" "-" 6 "auth-api@file" "http://authorization-service:8080" 401ms
+192.168.143.2 - - [25/Dec/2025:16:28:57 +0000] "GET /api/users HTTP/1.1" 200 271 "-" "-" 7 "users-api@file" "http://user-service:8080" 329ms
+192.168.143.2 - - [25/Dec/2025:16:28:59 +0000] "GET /api/support/admin/chat/conversations HTTP/1.1" 200 150 "-" "-" 8 "support-api@file" "http://customer-support-service:8086" 7ms
+192.168.143.2 - - [25/Dec/2025:16:29:01 +0000] "GET /api/support/admin/chat/conversations/a1683c16-7190-41b6-a477-9e3e99ab75a0/messages HTTP/1.1" 200 1167 "-" "-" 10 "support-api@file" "http://customer-support-service:8086" 6ms
+192.168.143.2 - - [25/Dec/2025:16:28:59 +0000] "GET /ws?userId=1&role=ADMIN HTTP/1.1" 0 0 "-" "-" 9 "support-ws@file" "http://customer-support-service:8086" 16446ms

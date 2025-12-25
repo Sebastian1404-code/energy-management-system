@@ -17,6 +17,8 @@ public class ChatService {
 
     private final ConversationRepository conversationRepo;
     private final MessageRepository messageRepo;
+    private final RuleBasedResponder ruleBasedResponder;
+
 
     public ConversationDto getOrCreateConversationForUser(String userId) {
         Optional<Conversation> existing = conversationRepo.findByUserId(userId);
@@ -59,9 +61,6 @@ public class ChatService {
         }
 
         List<Message> messages = messageRepo.findByConversationId(conversationId);
-        for (Message m : messages) {
-            System.out.println("  - " + m.getSenderRole() + " " + m.getSenderId() + ": " + m.getContent());
-        }
 
         return messages.stream().map(this::toDto).toList();
     }
@@ -81,6 +80,27 @@ public class ChatService {
         messageRepo.save(msg);
         touchConversation(conv.id());
         return toDto(msg);
+    }
+
+    public Optional<MessageDto> maybeCreateBotReply(UUID conversationId, String userText) {
+        if (conversationId == null) return Optional.empty();
+
+        Optional<String> reply = ruleBasedResponder.match(userText);
+        if (reply.isEmpty()) return Optional.empty();
+
+        Message botMsg = Message.builder()
+                .id(UUID.randomUUID())
+                .conversationId(conversationId)
+                .senderId("bot")
+                .senderRole(Role.ADMIN) // Option A: leaves UI as admin reply
+                .content(reply.get())
+                .createdAt(Instant.now())
+                .build();
+
+        messageRepo.save(botMsg);
+        touchConversation(conversationId);
+
+        return Optional.of(toDto(botMsg));
     }
 
     public MessageDto sendAdminMessage(String adminId, UUID conversationId, String content) {

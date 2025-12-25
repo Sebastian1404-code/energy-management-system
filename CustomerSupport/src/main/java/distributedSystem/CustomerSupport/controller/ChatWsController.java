@@ -37,6 +37,12 @@ public class ChatWsController {
         messaging.convertAndSend("/topic/chat.user." + userId, saved);
         // admin inbox
         messaging.convertAndSend("/topic/chat.admin.inbox", saved);
+
+        chatService.maybeCreateBotReply(saved.conversationId(), req.content())
+                .ifPresent(botMsg -> {
+                    messaging.convertAndSend("/topic/chat.user." + userId, botMsg);
+                    messaging.convertAndSend("/topic/chat.admin.inbox", botMsg);
+                });
     }
 
     // ADMIN sends a message to a conversation
