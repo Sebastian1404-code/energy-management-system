@@ -316,6 +316,8 @@ volumes:
   kafka-data:
 
 
+
+
 # Define a shared network for all services
 networks:
   proxy-network:
