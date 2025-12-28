@@ -2,6 +2,7 @@ package distributedSystem.CustomerSupport.service;
 
 
 import distributedSystem.CustomerSupport.Domain.*;
+import distributedSystem.CustomerSupport.gemini.GeminiClient;
 import distributedSystem.CustomerSupport.repository.*;
 import distributedSystem.CustomerSupport.dto.*;
 
@@ -18,6 +19,8 @@ public class ChatService {
     private final ConversationRepository conversationRepo;
     private final MessageRepository messageRepo;
     private final RuleBasedResponder ruleBasedResponder;
+    private final GeminiClient geminiClient;
+
 
 
     public ConversationDto getOrCreateConversationForUser(String userId) {
@@ -102,6 +105,35 @@ public class ChatService {
 
         return Optional.of(toDto(botMsg));
     }
+
+    public Optional<MessageDto> maybeCreateAiReply(UUID conversationId, String userText) {
+        if (conversationId == null) return Optional.empty();
+
+        // Very small context: last 6 messages (optional)
+        List<String> ctx = messageRepo.findByConversationId(conversationId).stream()
+                .sorted(Comparator.comparing(Message::getCreatedAt))
+                .skip(Math.max(0, messageRepo.findByConversationId(conversationId).size() - 6))
+                .map(m -> m.getSenderRole() + ": " + m.getContent())
+                .toList();
+
+        Optional<String> reply = geminiClient.generateReply(userText, ctx);
+        if (reply.isEmpty()) return Optional.empty();
+
+        Message aiMsg = Message.builder()
+                .id(UUID.randomUUID())
+                .conversationId(conversationId)
+                .senderId("ai")
+                .senderRole(Role.ADMIN) // Option A: render like admin/support
+                .content(reply.get())
+                .createdAt(Instant.now())
+                .build();
+
+        messageRepo.save(aiMsg);
+        touchConversation(conversationId);
+
+        return Optional.of(toDto(aiMsg));
+    }
+
 
     public MessageDto sendAdminMessage(String adminId, UUID conversationId, String content) {
 

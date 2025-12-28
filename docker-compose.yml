@@ -306,6 +306,7 @@ services:
       - proxy-network
     environment:
       SERVER_PORT: 8086
+      GEMINI_API_KEY: ${GEMINI_API_KEY}
 
 
 volumes:
