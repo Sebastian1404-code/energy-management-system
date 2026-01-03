@@ -53,7 +53,7 @@ public class DeviceService {
                 .maximConsumptionValue(req.getMaximConsumptionValue())
                 .userRef(ref)
                 .build());
-        deviceEventsProducer.publishDeviceCreatedEvent(saved.getId());
+        deviceEventsProducer.publishDeviceCreatedEvent(saved.getId(),saved.getUserRef().getUser_id(),saved.getMaximConsumptionValue());
         return new DeviceResponse(saved.getId(), saved.getName(), saved.getMaximConsumptionValue(), ref != null ? ref.getUser_id() : null);
     }
 
@@ -98,7 +98,10 @@ public class DeviceService {
 
 
     public void delete(Long id) {
-        deviceEventsProducer.publishDeviceDeletedEvent(id);
+        Device device=deviceRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Device not found with id: " + id));
+
+        deviceEventsProducer.publishDeviceDeletedEvent(id,device.getUserRef().getUser_id(),device.getMaximConsumptionValue());
         deviceRepo.deleteById(id);
     }
 

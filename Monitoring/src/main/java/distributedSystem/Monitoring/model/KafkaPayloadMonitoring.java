@@ -13,5 +13,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class KafkaPayloadMonitoring {
     private Long deviceId;
+    private Long userId;
+    private int maximConsumptionValue;
     private DevMonType devMonType;
 }

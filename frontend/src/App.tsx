@@ -12,6 +12,7 @@ import MyDevicesPage from "./pages/client/MyDevicesPage";
 import Register from "./pages/Register";
 import DeviceDetailsPage from "./pages/client/DeviceDetailsPage";
 import ChatPage from "./pages/ChatPage";
+import AlertsPanel from "./pages/client/AlertsPanel";
 
 export default function App() {
   return (
@@ -32,6 +33,7 @@ export default function App() {
             <Route element={<RequireRole allowed={["CLIENT"]} />}>
               <Route path="/me/devices" element={<MyDevicesPage/>}/>
               <Route path="/client/device/:deviceId" element={<DeviceDetailsPage/>}/>
+              <Route path="/alerts" element={<AlertsPanel/>}/>
             </Route>
           </Route>
           <Route path="*" element={<Navigate to="/" replace/>}/>

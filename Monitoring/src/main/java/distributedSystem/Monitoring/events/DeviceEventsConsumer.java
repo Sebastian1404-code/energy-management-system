@@ -21,9 +21,9 @@ public class DeviceEventsConsumer {
     )
     public void consumeDeviceCreated(KafkaPayloadMonitoring kafkaPayloadMonitoring) {
         switch (kafkaPayloadMonitoring.getDevMonType()) {
-            case DeviceCreated -> deviceRefService.handleDeviceCreated(kafkaPayloadMonitoring.getDeviceId());
+            case DeviceCreated -> deviceRefService.handleDeviceCreated(kafkaPayloadMonitoring.getDeviceId(),kafkaPayloadMonitoring.getUserId(),kafkaPayloadMonitoring.getMaximConsumptionValue());
 
-            case DeviceDeleted -> deviceRefService.handleDeviceDeleted(kafkaPayloadMonitoring.getDeviceId());
+            case DeviceDeleted -> deviceRefService.handleDeviceDeleted(kafkaPayloadMonitoring.getDeviceId(),kafkaPayloadMonitoring.getUserId(),kafkaPayloadMonitoring.getMaximConsumptionValue());
 
             default -> throw new IllegalArgumentException(
                     "Unsupported event type: " + kafkaPayloadMonitoring.getDevMonType()

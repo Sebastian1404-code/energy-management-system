@@ -16,13 +16,13 @@ public class DeviceEventsProducer {
         this.kafka = kafka;
     }
 
-    public void publishDeviceCreatedEvent(Long deviceId) {
-        KafkaPayloadMonitoring kafkaPayload=new KafkaPayloadMonitoring(deviceId,DevMonType.DeviceCreated);
+    public void publishDeviceCreatedEvent(Long deviceId,Long userId,int maximConsumptionValue) {
+        KafkaPayloadMonitoring kafkaPayload=new KafkaPayloadMonitoring(deviceId,userId,maximConsumptionValue,DevMonType.DeviceCreated);
         kafka.send(TOPIC, deviceId.toString(), kafkaPayload);
         System.out.println("[Kafka] Published deviceId -> " + deviceId);
     }
-    public void publishDeviceDeletedEvent(Long deviceId) {
-        KafkaPayloadMonitoring kafkaPayload = new KafkaPayloadMonitoring(deviceId, DevMonType.DeviceDeleted);
+    public void publishDeviceDeletedEvent(Long deviceId,Long userId,int maximConsumptionValue) {
+        KafkaPayloadMonitoring kafkaPayload = new KafkaPayloadMonitoring(deviceId, userId,maximConsumptionValue, DevMonType.DeviceDeleted);
         kafka.send(TOPIC, deviceId.toString(), kafkaPayload);
         System.out.println("[Kafka] Published DELETED event deviceId -> " + kafkaPayload);
     }

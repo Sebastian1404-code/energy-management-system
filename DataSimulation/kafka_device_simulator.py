@@ -50,7 +50,7 @@ def build_devices(prefix: str, device_indices: List[int]) -> List[DeviceState]:
     out = []
     for idx in device_indices:
         device_id = f"{prefix}{idx:03d}"   # ← formats 1 → device-001
-        base = random.uniform(0.05, 0.25)
+        base = random.uniform(1.0, 3.5)
         drift = random.uniform(-0.05, 0.05)
         out.append(DeviceState(device_id, base, drift))
     return out

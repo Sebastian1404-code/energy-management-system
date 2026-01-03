@@ -38,7 +38,6 @@ export default function DeviceDetailsPage() {
       const url = `/devices/${deviceId}/series?date=${date}&tz=Europe/Bucharest&virtualHourMinutes=1`;
       const resp = await monitoringApi.get(url);
       const data = resp.data;
-      console.log('Device series API response:', data);
       setSeries(Array.isArray(data) ? data : []);
     } catch (e: any) {
       setErr(e.message || "Error fetching data");
