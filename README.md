@@ -622,6 +622,180 @@ docker exec -it kafka \
     --topic device.monitoring \
     --from-beginning
 ```
+# 🚨 Real-Time Overconsumption Alerts (New Feature)
+
+The system now supports **real-time overconsumption alerts**, delivered instantly to users when a device exceeds a configured energy usage threshold.
+
+This feature extends the Monitoring pipeline with:
+
+- Per-device consumption thresholds
+- Instant alert generation
+- Kafka-based alert propagation
+- WebSocket-based real-time delivery to the frontend
+
+---
+
+## 🧠 Alerting Design Overview
+
+The alerting mechanism is **event-driven and fully decoupled**, following the same Kafka-first architecture used throughout the system.
+
+### High-Level Flow
+
+Device Simulator  
+↓ (device-readings)  
+Monitoring Service  
+↓ (device-alerts)  
+Customer Support / WebSocket Service  
+↓ (WebSocket / STOMP)  
+Frontend UI
+
+---
+
+## ⚡ Instant Alert Generation (Monitoring Service)
+
+The **Monitoring Service** continuously aggregates incoming smart-meter readings in memory using fixed-size time windows.
+
+For each `(deviceId, windowStart)` pair, it maintains a running total of energy consumption and compares it against the configured threshold.
+
+### Alert Trigger Conditions
+
+An alert is generated when **all** of the following conditions are met:
+
+- The device exists in `device_monitoring_ref`
+- The accumulated `totalKwh` for the current window becomes **strictly greater** than `maxim_consumption_value`
+- No alert has already been sent for the same device and window
+
+### Simplified Logic
+
+```java
+if (!bucket.alerted && bucket.totalKwh > threshold) {
+    bucket.alerted = true;
+    publishAlert();
+}
+```
+This design guarantees:
+
+- **Immediate detection of overconsumption**  
+  Alerts are triggered as soon as the running energy total crosses the configured threshold, without waiting for database flushes or window completion.
+
+- **Exactly one alert per device per time window**  
+  A per-window in-memory flag prevents duplicate alerts, even if additional readings continue to arrive after the threshold has been exceeded.
+
+- **Automatic reset when a new window begins**  
+  When the aggregation window changes, a new bucket is created and alerting is re-enabled for that device.
+
+---
+
+## 📨 Alert Event Publication (`device-alerts`)
+
+Once an overconsumption condition is detected, the Monitoring Service publishes an alert event to Kafka.  
+This event represents a **domain-level notification** that can be consumed by multiple downstream services.
+
+### Kafka Topic
+device-alerts
 
 
+### Alert Payload Structure
+
+```json
+{
+  "userId": 2,
+  "deviceId": 1,
+  "windowStartUtc": "2026-01-03T22:10:00Z",
+  "windowMinutes": 1,
+  "kwhSoFar": 1.42,
+  "maxConsumptionValue": 1,
+  "createdAtUtc": "2026-01-03T22:10:35Z"
+}
+```
+
+Together, these fields allow downstream services and the frontend to:
+
+- Clearly identify **which user** is affected by the alert
+- Determine **which device** caused the overconsumption
+- Understand **when** the event occurred and over which time window
+- Display meaningful context, such as how much the threshold was exceeded
+
+This makes the alert event **self-describing**, eliminating the need for additional lookups when delivering or displaying alerts.
+
+---
+
+## 📡 WebSocket-Based Alert Delivery (Customer Support Service)
+
+The **Customer Support Service** is responsible for delivering alert events to end users in real time.
+
+Rather than exposing additional REST endpoints or polling mechanisms, the service leverages the existing **WebSocket / STOMP** infrastructure already used for real-time features.
+
+### Role of the Customer Support Service
+
+- Consumes alert events from the `device-alerts` Kafka topic
+- Acts as a lightweight delivery layer
+- Routes alerts to the correct user based on `userId`
+- Forwards alerts over WebSocket without modifying their contents
+
+This keeps alerting logic centralized in the Monitoring Service while allowing the delivery layer to remain simple and scalable.
+
+---
+
+## 🔌 Kafka Consumer Logic
+
+The service subscribes to the alert topic and forwards each alert to a user-specific WebSocket destination.
+
+```java
+@KafkaListener(topics = "device-alerts", groupId = "ws-alerts")
+public void onAlert(OverconsumptionAlertDto alert) {
+    messaging.convertAndSend(
+        "/topic/alerts.user." + alert.userId(),
+        alert
+    );
+}
+```
+🧭 WebSocket Routing Strategy
+
+The system uses a **user-scoped WebSocket routing model** to ensure that alerts are delivered only to their rightful owners.
+
+### User-Specific Destinations
+
+Each authenticated user establishes a single WebSocket connection and subscribes to a destination of the form:
+
+/topic/alerts.user.{userId}
+
+
+Where:
+- `{userId}` is the numeric identifier injected by Traefik during authentication
+- The destination is unique per user session
+
+### Why This Strategy Works Well
+
+This routing approach provides several important guarantees:
+
+- **Strict isolation**  
+  Each alert is sent only to the user who owns the affected device.
+
+- **No server-side session tracking**  
+  The WebSocket service does not need to maintain connection registries or user maps.
+
+- **Horizontal scalability**  
+  Multiple WebSocket service instances can consume from Kafka and push alerts independently.
+
+- **Single connection, multiple streams**  
+  The same WebSocket connection can be reused for:
+    - chat messages
+    - system notifications
+    - overconsumption alerts
+
+---
+
+## 🧠 Design Rationale
+
+The alerting system follows the same architectural principles as the rest of the platform:
+
+- **Monitoring Service** owns all business logic
+- **Kafka** acts as the event backbone
+- **Customer Support Service** is a pure delivery layer
+- **Frontend** reacts to real-time events without polling
+
+This separation ensures that alerting logic can evolve independently from UI concerns or delivery mechanisms.
+
+---
 
