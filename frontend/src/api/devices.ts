@@ -14,4 +14,5 @@ export const DevicesApi = {
     (await deviceApi.put<Device>(`/${deviceId}`, userId, {
       headers: { "Content-Type": "application/json" }
     })).data,
+  getById: async (id: number) => (await deviceApi.get<Device>(`/${id}`)).data,
 };

@@ -12,6 +12,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 @Controller
@@ -37,6 +38,21 @@ public class ChatWsController {
         messaging.convertAndSend("/topic/chat.user." + userId, saved);
         // admin inbox
         messaging.convertAndSend("/topic/chat.admin.inbox", saved);
+
+
+        Optional<MessageDto> bot = chatService.maybeCreateBotReply(saved.conversationId(), req.content());
+        if (bot.isPresent()) {
+            MessageDto botMsg = bot.get();
+            messaging.convertAndSend("/topic/chat.user." + userId, botMsg);
+            messaging.convertAndSend("/topic/chat.admin.inbox", botMsg);
+        } else {
+            // No rule matched -> AI reply
+            chatService.maybeCreateAiReply(saved.conversationId(), req.content())
+                    .ifPresent(aiMsg -> {
+                        messaging.convertAndSend("/topic/chat.user." + userId, aiMsg);
+                        messaging.convertAndSend("/topic/chat.admin.inbox", aiMsg);
+                    });
+        }
     }
 
     // ADMIN sends a message to a conversation

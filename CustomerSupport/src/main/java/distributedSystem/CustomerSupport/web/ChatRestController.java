@@ -30,7 +30,18 @@ public class ChatRestController {
     @PostMapping("/chat/messages")
     public MessageDto userSend(@RequestParam String userId,
                                @Valid @RequestBody SendMessageRequest req) {
-        return chatService.sendUserMessage(userId, req.content());
+
+        MessageDto userMsg = chatService.sendUserMessage(userId, req.content());
+        boolean ruleMatched = chatService
+                .maybeCreateBotReply(userMsg.conversationId(), req.content())
+                .isPresent();
+
+        if (!ruleMatched) {
+            chatService.maybeCreateAiReply(userMsg.conversationId(), req.content());
+        }
+
+        return userMsg;
+
     }
 
 

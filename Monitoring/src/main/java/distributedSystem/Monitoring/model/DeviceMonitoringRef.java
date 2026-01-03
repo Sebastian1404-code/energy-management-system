@@ -18,4 +18,6 @@ public class DeviceMonitoringRef {
 
     @Id
     private Long device_id;
+    private Long userId;
+    private int maximConsumptionValue;
 }

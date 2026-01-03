@@ -69,7 +69,6 @@ export default function MyDevicesPage() {
       setRows(allDevices.filter(d => d.userId === userId));
       // Fetch device summaries from monitoring endpoint
       const data = await getDeviceSummaries();
-      console.log('Device summaries API response:', data);
       setSummaries(Array.isArray(data) ? data : []);
     })();
   }, [username]);
@@ -83,9 +82,15 @@ export default function MyDevicesPage() {
   return (
     <div style={{ minHeight: "100vh", background: "linear-gradient(120deg, #e9eafc 0%, #f8f9fa 100%)", padding: "40px 0" }}>
       <div style={cardStyle}>
-        <h2 style={{ textAlign: "center", color: "#6c63ff", marginBottom: 32, letterSpacing: 1 }}>
-          My Devices {username ? `for ${username}` : ""}
-        </h2>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+          <h2 style={{ textAlign: "center", color: "#6c63ff", marginBottom: 0, letterSpacing: 1 }}>
+            My Devices {username ? `for ${username}` : ""}
+          </h2>
+          <button onClick={() => nav("/alerts")}
+            style={{ padding: "8px 16px", borderRadius: 8, background: "#dc3545", color: "#fff", border: "none", fontWeight: 500, fontSize: 16, cursor: "pointer", marginLeft: 16 }}>
+            View Alerts
+          </button>
+        </div>
         {rows.length === 0 && (
           <div style={{ textAlign: "center", color: "#888", fontSize: 17, marginBottom: 24 }}>
             No devices assigned to your account.

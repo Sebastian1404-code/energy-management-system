@@ -2,6 +2,7 @@ package distributedSystem.CustomerSupport.service;
 
 
 import distributedSystem.CustomerSupport.Domain.*;
+import distributedSystem.CustomerSupport.gemini.GeminiClient;
 import distributedSystem.CustomerSupport.repository.*;
 import distributedSystem.CustomerSupport.dto.*;
 
@@ -17,6 +18,10 @@ public class ChatService {
 
     private final ConversationRepository conversationRepo;
     private final MessageRepository messageRepo;
+    private final RuleBasedResponder ruleBasedResponder;
+    private final GeminiClient geminiClient;
+
+
 
     public ConversationDto getOrCreateConversationForUser(String userId) {
         Optional<Conversation> existing = conversationRepo.findByUserId(userId);
@@ -59,9 +64,6 @@ public class ChatService {
         }
 
         List<Message> messages = messageRepo.findByConversationId(conversationId);
-        for (Message m : messages) {
-            System.out.println("  - " + m.getSenderRole() + " " + m.getSenderId() + ": " + m.getContent());
-        }
 
         return messages.stream().map(this::toDto).toList();
     }
@@ -82,6 +84,56 @@ public class ChatService {
         touchConversation(conv.id());
         return toDto(msg);
     }
+
+    public Optional<MessageDto> maybeCreateBotReply(UUID conversationId, String userText) {
+        if (conversationId == null) return Optional.empty();
+
+        Optional<String> reply = ruleBasedResponder.match(userText);
+        if (reply.isEmpty()) return Optional.empty();
+
+        Message botMsg = Message.builder()
+                .id(UUID.randomUUID())
+                .conversationId(conversationId)
+                .senderId("bot")
+                .senderRole(Role.ADMIN) // Option A: leaves UI as admin reply
+                .content(reply.get())
+                .createdAt(Instant.now())
+                .build();
+
+        messageRepo.save(botMsg);
+        touchConversation(conversationId);
+
+        return Optional.of(toDto(botMsg));
+    }
+
+    public Optional<MessageDto> maybeCreateAiReply(UUID conversationId, String userText) {
+        if (conversationId == null) return Optional.empty();
+
+        // Very small context: last 6 messages (optional)
+        List<String> ctx = messageRepo.findByConversationId(conversationId).stream()
+                .sorted(Comparator.comparing(Message::getCreatedAt))
+                .skip(Math.max(0, messageRepo.findByConversationId(conversationId).size() - 6))
+                .map(m -> m.getSenderRole() + ": " + m.getContent())
+                .toList();
+
+        Optional<String> reply = geminiClient.generateReply(userText, ctx);
+        if (reply.isEmpty()) return Optional.empty();
+
+        Message aiMsg = Message.builder()
+                .id(UUID.randomUUID())
+                .conversationId(conversationId)
+                .senderId("ai")
+                .senderRole(Role.ADMIN) // Option A: render like admin/support
+                .content(reply.get())
+                .createdAt(Instant.now())
+                .build();
+
+        messageRepo.save(aiMsg);
+        touchConversation(conversationId);
+
+        return Optional.of(toDto(aiMsg));
+    }
+
 
     public MessageDto sendAdminMessage(String adminId, UUID conversationId, String content) {
 

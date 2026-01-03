@@ -3,9 +3,8 @@ import { useAuth } from "../auth/AuthContext";
 import { useNavigate } from "react-router-dom";
 
 export default function Dashboard() {
-  const { username, userId, role, token, logout } = useAuth();
+  const { username, userId, role,  logout } = useAuth();
   const nav = useNavigate();
-  console.log("Logged in?", !!token, "userId:", userId, "role:", role);
 
   return (
     <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", background: "linear-gradient(120deg, #6c63ff 0%, #007bff 100%)" }}>

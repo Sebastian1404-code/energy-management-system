@@ -15,11 +15,11 @@ public class DeviceRefService {
         this.deviceMonitoringRefRepository = deviceMonitoringRef;
     }
 
-    public void handleDeviceCreated(Long deviceId) {
-        deviceMonitoringRefRepository.findById(deviceId).orElseGet(() -> deviceMonitoringRefRepository.save(DeviceMonitoringRef.builder().device_id(deviceId).build()));
+    public void handleDeviceCreated(Long deviceId,Long userId,int maximConsumptionValue) {
+        deviceMonitoringRefRepository.findById(deviceId).orElseGet(() -> deviceMonitoringRefRepository.save(DeviceMonitoringRef.builder().device_id(deviceId).userId(userId).maximConsumptionValue(maximConsumptionValue).build()));
     }
 
-    public void handleDeviceDeleted(Long deviceId)
+    public void handleDeviceDeleted(Long deviceId,Long userId,int maximConsumptionValue)
     {
         deviceMonitoringRefRepository.findById(deviceId)
                 .ifPresent(deviceMonitoringRefRepository::delete);
