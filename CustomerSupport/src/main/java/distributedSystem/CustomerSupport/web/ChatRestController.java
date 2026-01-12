@@ -19,7 +19,6 @@ public class ChatRestController {
 
     private final ChatService chatService;
 
-    // USER: get or create conversation
     @GetMapping("/chat/conversation")
     public ConversationDto getMyConversation(@RequestParam String userId) {
         return chatService.getOrCreateConversationForUser(userId);
@@ -63,11 +62,9 @@ public class ChatRestController {
     @GetMapping("/admin/chat/conversations/{conversationId}/messages")
     public List<MessageDto> adminGetMessages(@RequestHeader(value = "X-Admin-Id", required = false) String adminId,
                                              @PathVariable UUID conversationId) {
-        // adminId is optional here; kept for audit later
         return chatService.getMessages(conversationId, adminId == null ? "admin" : adminId, Role.ADMIN);
     }
 
-    // ADMIN: send message
     @PostMapping("/admin/chat/conversations/{conversationId}/messages")
     public MessageDto adminSend(@RequestHeader(value = "X-Admin-Id", required = false) String adminId,
                                 @PathVariable UUID conversationId,

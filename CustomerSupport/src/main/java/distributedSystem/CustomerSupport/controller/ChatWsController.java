@@ -46,7 +46,6 @@ public class ChatWsController {
             messaging.convertAndSend("/topic/chat.user." + userId, botMsg);
             messaging.convertAndSend("/topic/chat.admin.inbox", botMsg);
         } else {
-            // No rule matched -> AI reply
             chatService.maybeCreateAiReply(saved.conversationId(), req.content())
                     .ifPresent(aiMsg -> {
                         messaging.convertAndSend("/topic/chat.user." + userId, aiMsg);
@@ -55,7 +54,6 @@ public class ChatWsController {
         }
     }
 
-    // ADMIN sends a message to a conversation
     @MessageMapping("/chat.admin.send")
     public void adminSend(@Payload WsAdminSend req,
                           @Header("simpSessionAttributes") Map<String, Object> attrs) {
@@ -63,7 +61,6 @@ public class ChatWsController {
         String adminId = String.valueOf(attrs.getOrDefault("userId", "admin"));
         String role = String.valueOf(attrs.getOrDefault("role", "USER"));
 
-        // Not "security", just a simple guard to avoid accidental misuse
         if (!"ADMIN".equalsIgnoreCase(role)) {
             messaging.convertAndSend("/topic/chat.admin.errors",
                     new WsError("error", "Only role=ADMIN can send admin messages."));
@@ -76,7 +73,6 @@ public class ChatWsController {
             messaging.convertAndSend("/topic/chat.user." + ownerUserId, saved);
         });
 
-        // optional echo/update for admin screens
         messaging.convertAndSend("/topic/chat.admin.inbox", saved);
     }
 

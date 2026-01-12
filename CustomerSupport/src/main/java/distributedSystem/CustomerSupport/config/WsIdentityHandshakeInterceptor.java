@@ -20,9 +20,8 @@ public class WsIdentityHandshakeInterceptor implements HandshakeInterceptor {
         var params = UriComponentsBuilder.fromUri(uri).build().getQueryParams();
 
         String userId = params.getFirst("userId");   // required for routing
-        String role = params.getFirst("role");       // USER / ADMIN (optional, for admin send)
+        String role = params.getFirst("role");
 
-        // No security: allow even if missing, but routing will fail if userId is null.
         attributes.put("userId", userId == null ? "anonymous" : userId);
         attributes.put("role", role == null ? "USER" : role.toUpperCase());
 

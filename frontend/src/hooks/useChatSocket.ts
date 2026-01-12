@@ -1,7 +1,9 @@
+
 import { useEffect, useRef, useState } from "react";
 import { Client } from "@stomp/stompjs";
 import type { StompSubscription } from "@stomp/stompjs";
 import type { IMessage } from "@stomp/stompjs";
+import SockJS from "sockjs-client";
 
 
 type MessageDto = {
@@ -19,8 +21,9 @@ export function useChatSocket(userId: string | null, role: string) {
 
   useEffect(() => {
     if (!userId) return;
+    const sock = new SockJS(`/ws?userId=${userId}&role=${role}`);
     const client = new Client({
-      brokerURL: `ws://localhost/ws?userId=${userId}&role=${role}`,
+      webSocketFactory: () => sock,
       reconnectDelay: 5000,
       debug: () => {},
     });
